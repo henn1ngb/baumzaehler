@@ -230,15 +230,15 @@ function defaultState(){
   return {
     v:2,
     types:[
+      {id:"mue", name:"Müll",  color:"#c4453c", img:null, sizes:[ sz("1 – 6 m") ]},
+      {id:"u",   name:"U",     color:"#6f7d78", img:null, sizes:[ sz("0 – 0,5 m"), sz("0,5 – 1 m") ]},
+      {id:"son", name:"Sonder",color:"#e08a2e", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
+      {id:"vog", name:"Vogel", color:"#3f6fd1", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]},
       {id:"nm1", name:"NM 1",  color:"#1f8a3b", img:null, sizes:[
         sz("3,5 – 6 m", true), sz("2,6 – 3,5 m", true),
         sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m")
       ]},
-      {id:"nm2", name:"NM 2",  color:"#3aa6a0", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]},
-      {id:"son", name:"Sonder",color:"#e08a2e", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
-      {id:"vog", name:"Vogel", color:"#3f6fd1", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]},
-      {id:"mue", name:"Müll",  color:"#c4453c", img:null, sizes:[ sz("1 – 6 m") ]},
-      {id:"u",   name:"U",     color:"#6f7d78", img:null, sizes:[ sz("0 – 0,5 m"), sz("0,5 – 1 m") ]}
+      {id:"nm2", name:"NM 2",  color:"#3aa6a0", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]}
     ],
     fields:[ {id:uid(), name:"Feld 1", subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]} ],
     activeField:null, activeSub:null
@@ -291,6 +291,15 @@ function load(){
   return defaultState();
 }
 let S = load();
+/* Kachel-Reihenfolge: Müll & U oben, NM 1 & NM 2 unten (gilt auch für bestehende Daten) */
+(function(){
+  const order = ["mue","u","son","vog","nm1","nm2"];
+  S.types.sort((a,b)=>{
+    let ia = order.indexOf(a.id), ib = order.indexOf(b.id);
+    if(ia<0) ia = 99; if(ib<0) ib = 99;
+    return ia - ib;
+  });
+})();
 if(!S.activeField || !S.fields.find(f=>f.id===S.activeField)) S.activeField = S.fields[0].id;
 ensureActiveSub();
 save();
@@ -426,11 +435,11 @@ function renderSize(){
   app.innerHTML = `
     <div class="sizehead" style="${tileStyle(t.color, t.img)}">${esc(t.name)} – Größe wählen${showExtra?" (große Bäume)":""}</div>
     <div class="sizes" style="grid-template-rows:repeat(${Math.max(rows,1)},1fr)">
+      ${moreBtn?`<button class="tile moretile" id="btnMore"><span class="tname" style="font-size:22px;">Mehr… (${extra.map(x=>esc(x.label)).join(" · ")})</span></button>`:""}
       ${shown.map(s=>`
         <button class="tile" data-sid="${s.id}" style="${tileStyle(s.color||t.color, s.img||null)}">
           <span class="tname">${esc(s.label)}</span>
         </button>`).join("")}
-      ${moreBtn?`<button class="tile moretile" id="btnMore"><span class="tname" style="font-size:22px;">Mehr… (${extra.map(x=>esc(x.label)).join(" · ")})</span></button>`:""}
     </div>
     <button class="backbtn" id="btnBack">${showExtra?"← Zurück zu den Standardgrößen":"✕ Abbrechen (zurück ohne Speichern)"}</button>`;
 
