@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a2421">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Baumzähler">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Baumzähler</title>
+<style>
+  :root{
+    --bg:#1a2421; --panel:#243430; --panel2:#2e423c; --line:#3a524a;
+    --text:#f2f7f4; --muted:#9db8ae; --accent:#ffd23f; --danger:#e05252;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{height:100%; margin:0; overscroll-behavior:none;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex; flex-direction:column;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #app{flex:1; display:flex; flex-direction:column; min-height:0;}
+
+  header{padding:10px 12px 6px;}
+  .ctx{display:flex; gap:8px;}
+  .ctx select{
+    flex:1; min-width:0; background:var(--panel); color:var(--text);
+    border:1px solid var(--line); border-radius:10px;
+    font-size:16px; font-weight:600; padding:10px 8px; appearance:none;
+  }
+  .undobar{
+    margin:6px 12px 0; padding:10px 12px; border-radius:10px;
+    background:var(--panel); border:1px solid var(--line);
+    display:flex; align-items:center; gap:10px; min-height:46px;
+  }
+  .undobar .last{flex:1; font-size:14px; color:var(--muted); overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+  .undobar .last b{color:var(--text);}
+  .undobar button{
+    background:var(--panel2); color:var(--accent); border:1px solid var(--line);
+    border-radius:8px; font-size:14px; font-weight:700; padding:8px 12px;
+  }
+  .undobar button:disabled{opacity:.35;}
+
+  .grid{
+    flex:1; min-height:0; display:grid; gap:10px; padding:10px 12px 12px;
+    grid-template-columns:1fr 1fr;
+  }
+  .tile{
+    border:none; border-radius:var(--radius); color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-weight:800; padding:6px; position:relative; overflow:hidden;
+    box-shadow:0 3px 0 rgba(0,0,0,.35);
+  }
+  .tile:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35);}
+  .tile .tname{font-size:clamp(20px,6vw,30px); line-height:1.1; text-shadow:0 1px 4px rgba(0,0,0,.55); text-align:center;}
+  .tile .tsub{font-size:13px; font-weight:600; opacity:.9; margin-top:4px; text-shadow:0 1px 3px rgba(0,0,0,.55);}
+  .tile .tcount{
+    position:absolute; top:6px; right:9px; font-size:14px; font-weight:700;
+    background:rgba(0,0,0,.38); border-radius:99px; padding:2px 9px;
+  }
+  .tile.moretile{background:var(--panel); border:2px dashed var(--line); color:var(--text); box-shadow:none;}
+  .flash{animation:flash .25s ease;}
+  @keyframes flash{0%{filter:brightness(1.7);}100%{filter:brightness(1);}}
+  @media (prefers-reduced-motion: reduce){ .flash{animation:none;} .tile:active{transform:none;} }
+
+  .sizehead{
+    margin:10px 12px 0; padding:14px; border-radius:var(--radius);
+    font-size:20px; font-weight:800; color:#fff; text-align:center; text-shadow:0 1px 4px rgba(0,0,0,.5);
+  }
+  .sizes{flex:1; min-height:0; display:grid; gap:10px; padding:10px 12px;}
+  .sizes .tile .tname{font-size:clamp(22px,7vw,34px);}
+  .backbtn{
+    margin:0 12px 12px; padding:16px; border-radius:var(--radius);
+    background:var(--panel); color:var(--text); border:1px solid var(--line);
+    font-size:17px; font-weight:700;
+  }
+
+  .page{flex:1; min-height:0; overflow-y:auto; padding:12px; -webkit-overflow-scrolling:touch;}
+  .page h2{font-size:18px; margin:14px 0 8px;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:12px;}
+  table{width:100%; border-collapse:collapse; font-size:15px;}
+  th,td{text-align:left; padding:7px 4px; border-bottom:1px solid var(--line);}
+  th{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
+  td.num{text-align:right; font-variant-numeric:tabular-nums; font-weight:700;}
+  .dot{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:7px;}
+  .row{display:flex; gap:7px; align-items:center; margin-bottom:8px; flex-wrap:nowrap;}
+  .row .grow{flex:1; min-width:0; overflow:hidden;}
+  .btn{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:10px; font-size:15px; font-weight:700; padding:12px 14px;
+  }
+  .btn.primary{background:var(--accent); color:#1a2421; border-color:var(--accent);}
+  .btn.danger{color:var(--danger);}
+  .btn.small{padding:8px 10px; font-size:14px; min-width:38px;}
+  .btn.wide{width:100%; margin-top:6px;}
+  .muted{color:var(--muted); font-size:13px; line-height:1.4;}
+  .corr{display:inline-flex; gap:6px;}
+  .corr button{width:34px; height:34px; border-radius:8px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:18px; font-weight:800;}
+  input[type=text]{background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:11px; font-size:16px; width:100%;}
+  input[type=color]{border:1px solid var(--line); background:var(--panel2); border-radius:8px; width:40px; height:38px; padding:2px; flex:none;}
+  .thumb{width:38px; height:38px; border-radius:8px; background-size:cover; background-position:center; flex:none; border:1px solid var(--line);}
+  .badge{font-size:11px; background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:2px 6px; color:var(--muted); margin-left:5px; vertical-align:middle;}
+  .warn{background:#5a3a16; border:1px solid #a9762d; color:#ffd9a0; border-radius:10px; padding:10px 12px; margin:10px 12px 0; font-size:13px; line-height:1.4;}
+  .hidden{display:none !important;}
+  footer.tabs{display:flex; border-top:1px solid var(--line); background:var(--panel);}
+  footer.tabs button{
+    flex:1; background:none; border:none; color:var(--muted);
+    font-size:13px; font-weight:700; padding:11px 4px 13px;
+  }
+  footer.tabs button.active{color:var(--accent);}
+
+  /* Eigene Dialoge (ersetzen prompt/confirm, die auf manchen Handys blockiert werden) */
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px; width:100%; max-width:380px;
+  }
+  .modal h3{margin:0 0 12px; font-size:17px;}
+  .modal p{margin:0 0 14px; font-size:15px; line-height:1.45; color:var(--text); user-select:text;}
+  .mbtns{display:flex; gap:8px; margin-top:14px;}
+  .mbtns .btn{flex:1;}
+  .mlist .btn{width:100%; margin-bottom:8px; text-align:left;}
+</style>
+</head>
+<body>
+<div id="storageWarn" class="warn hidden">
+  ⚠️ Dauerhaftes Speichern ist hier nicht möglich. Bitte die Datei <b>im Browser (Chrome/Safari) öffnen</b>, nicht in einer Vorschau – sonst gehen Zählungen beim Schließen verloren.
+</div>
+<div id="app"></div>
+<footer class="tabs">
+  <button id="tabCount">🌲 Zählen</button>
+  <button id="tabReport">📊 Bericht</button>
+  <button id="tabSettings">⚙️ Verwalten</button>
+</footer>
+
+<script>
+"use strict";
+
+/* ================= Hilfen ================= */
+function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-3); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function tileStyle(color, img){
+  return img
+    ? "background-image:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.42)),url('"+img+"');background-size:cover;background-position:center;background-color:"+color+";"
+    : "background:"+color+";";
+}
+
+/* ================= Eigene Dialoge ================= */
+function buildOverlay(inner){
+  const ov = document.createElement("div");
+  ov.className = "overlay";
+  ov.innerHTML = '<div class="modal">'+inner+'</div>';
+  document.body.appendChild(ov);
+  return ov;
+}
+function askText(title, value){
+  return new Promise(res=>{
+    const ov = buildOverlay('<h3>'+esc(title)+'</h3><input type="text" id="mIn"><div class="mbtns"><button class="btn" id="mC">Abbrechen</button><button class="btn primary" id="mO">OK</button></div>');
+    const inp = ov.querySelector("#mIn"); inp.value = value||""; setTimeout(()=>{ inp.focus(); inp.select(); }, 60);
+    const done = v=>{ ov.remove(); res(v); };
+    ov.querySelector("#mO").onclick = ()=>done(inp.value.trim()||null);
+    inp.onkeydown = e=>{ if(e.key==="Enter") done(inp.value.trim()||null); };
+    ov.querySelector("#mC").onclick = ()=>done(null);
+  });
+}
+function askConfirm(text, okLabel, danger){
+  return new Promise(res=>{
+    const ov = buildOverlay('<h3>Bestätigen</h3><p>'+esc(text)+'</p><div class="mbtns"><button class="btn" id="mC">Abbrechen</button><button class="btn '+(danger?'danger':'primary')+'" id="mO">'+esc(okLabel||"OK")+'</button></div>');
+    ov.querySelector("#mO").onclick = ()=>{ ov.remove(); res(true); };
+    ov.querySelector("#mC").onclick = ()=>{ ov.remove(); res(false); };
+  });
+}
+function askChoice(title, options){
+  return new Promise(res=>{
+    const ov = buildOverlay('<h3>'+esc(title)+'</h3><div class="mlist">'+options.map((o,i)=>'<button class="btn" data-i="'+i+'">'+esc(o)+'</button>').join("")+'</div><div class="mbtns"><button class="btn" id="mC">Abbrechen</button></div>');
+    ov.querySelectorAll(".mlist .btn").forEach(b=>b.onclick=()=>{ ov.remove(); res(+b.dataset.i); });
+    ov.querySelector("#mC").onclick = ()=>{ ov.remove(); res(null); };
+  });
+}
+function pickImage(){
+  return new Promise(res=>{
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = ()=>{
+      const f = inp.files && inp.files[0];
+      if(!f){ res(null); return; }
+      const r = new FileReader();
+      r.onload = ()=>{
+        const img = new Image();
+        img.onload = ()=>{
+          try{
+            const max = 480;
+            const sc = Math.min(1, max/Math.max(img.width, img.height));
+            const c = document.createElement("canvas");
+            c.width = Math.max(1, Math.round(img.width*sc));
+            c.height = Math.max(1, Math.round(img.height*sc));
+            c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+            res(c.toDataURL("image/jpeg", 0.7));
+          }catch(e){ res(null); }
+        };
+        img.onerror = ()=>res(null);
+        img.src = r.result;
+      };
+      r.onerror = ()=>res(null);
+      r.readAsDataURL(f);
+    };
+    inp.click();
+  });
+}
+
+/* ================= Speicher & Migration ================= */
+const KEY = "baumzaehler_v2";
+const OLDKEY = "baumzaehler_v1";
+let storageOK = true;
+try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); }
+catch(e){ storageOK = false; document.getElementById("storageWarn").classList.remove("hidden"); }
+let memFallback = null;
+
+function sz(label, extra){ return {id:uid(), label:label, color:null, img:null, extra:!!extra}; }
+
+function defaultState(){
+  return {
+    v:2,
+    types:[
+      {id:"nm1", name:"NM 1",  color:"#1f8a3b", img:null, sizes:[
+        sz("3,5 – 6 m", true), sz("2,6 – 3,5 m", true),
+        sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m")
+      ]},
+      {id:"nm2", name:"NM 2",  color:"#3aa6a0", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]},
+      {id:"son", name:"Sonder",color:"#e08a2e", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
+      {id:"vog", name:"Vogel", color:"#3f6fd1", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]},
+      {id:"mue", name:"Müll",  color:"#c4453c", img:null, sizes:[ sz("1 – 6 m") ]},
+      {id:"u",   name:"U",     color:"#6f7d78", img:null, sizes:[ sz("0 – 0,5 m"), sz("0,5 – 1 m") ]}
+    ],
+    fields:[ {id:uid(), name:"Feld 1", subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]} ],
+    activeField:null, activeSub:null
+  };
+}
+
+function migrateV1(old){
+  // v1: Größen waren Text-Listen, Zähler über Index – umbauen auf feste IDs
+  const s = defaultState();
+  // Felder/Zählungen übernehmen
+  s.fields = old.fields.map(f=>({
+    id:f.id, name:f.name,
+    subs:f.subs.map(sub=>({id:sub.id, name:sub.name, counts:{}, log:[], _old:sub.counts||{}}))
+  }));
+  // Index→ID-Zuordnung über die v1-Typdefinition aufbauen
+  const map = {}; // "altTyp|idx" -> "neuTyp|sizeId"
+  (old.types||[]).forEach(ot=>{
+    const newId = ot.id==="u1" ? "u" : ot.id;
+    const nt = s.types.find(t=>t.id===newId);
+    if(!nt) return;
+    (ot.sizes||[]).forEach((lbl,i)=>{
+      // Größe mit gleichem Label suchen, sonst erste Größe
+      let target = nt.sizes.find(x=>x.label.replace(/\s/g,"")===String(lbl).replace(/\s/g,""));
+      if(!target) target = nt.sizes[0];
+      map[ot.id+"|"+i] = nt.id+"|"+target.id;
+    });
+    // Farben übernehmen
+    if(ot.color) nt.color = ot.color;
+    if(ot.id!=="u1" && ot.name) nt.name = ot.name;
+  });
+  s.fields.forEach(f=>f.subs.forEach(sub=>{
+    for(const k in sub._old){
+      const nk = map[k]; if(!nk) continue;
+      sub.counts[nk] = (sub.counts[nk]||0) + sub._old[k];
+    }
+    delete sub._old;
+  }));
+  s.activeField = old.activeField; s.activeSub = old.activeSub;
+  return s;
+}
+
+function load(){
+  if(!storageOK){ if(!memFallback) memFallback = defaultState(); return memFallback; }
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){ const s = JSON.parse(raw); if(s && s.types && s.fields) return s; }
+    const old = localStorage.getItem(OLDKEY);
+    if(old){ const o = JSON.parse(old); if(o && o.types && o.fields) return migrateV1(o); }
+  }catch(e){}
+  return defaultState();
+}
+let S = load();
+if(!S.activeField || !S.fields.find(f=>f.id===S.activeField)) S.activeField = S.fields[0].id;
+ensureActiveSub();
+save();
+
+function ensureActiveSub(){
+  const f = curField();
+  if(!f.subs.length) f.subs.push({id:uid(), name:"Bereich A", counts:{}, log:[]});
+  if(!S.activeSub || !f.subs.find(s=>s.id===S.activeSub)) S.activeSub = f.subs[0].id;
+}
+function save(){
+  if(!storageOK){ memFallback = S; return; }
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){
+    alert("Achtung: Speichern fehlgeschlagen! Möglicherweise zu viele/zu große Fotos. Bitte Fotos entfernen oder Speicherplatz prüfen.");
+  }
+}
+function curField(){ return S.fields.find(f=>f.id===S.activeField); }
+function curSub(){ return curField().subs.find(s=>s.id===S.activeSub); }
+function findSize(t, sid){ return t.sizes.find(x=>x.id===sid); }
+
+/* ================= Zähl-Logik ================= */
+function addCount(typeId, sizeId){
+  const sub = curSub();
+  const k = typeId + "|" + sizeId;
+  sub.counts[k] = (sub.counts[k]||0) + 1;
+  sub.log.push(k);
+  if(sub.log.length > 3000) sub.log.shift();
+  save();
+  if(navigator.vibrate) navigator.vibrate(25);
+}
+function undo(){
+  const sub = curSub();
+  const k = sub.log.pop();
+  if(!k) return;
+  if(sub.counts[k]) sub.counts[k]--;
+  if(sub.counts[k]===0) delete sub.counts[k];
+  save(); render();
+}
+function adjust(sub, k, delta){
+  sub.counts[k] = Math.max(0,(sub.counts[k]||0) + delta);
+  if(sub.counts[k]===0) delete sub.counts[k];
+  save(); render();
+}
+function subTotal(sub){ return Object.values(sub.counts).reduce((a,b)=>a+b,0); }
+function typeTotalInSub(sub, typeId){
+  let n=0; for(const k in sub.counts){ if(k.indexOf(typeId+"|")===0) n += sub.counts[k]; }
+  return n;
+}
+
+/* ================= Ansichten ================= */
+const app = document.getElementById("app");
+let view = "count";
+let sizeType = null;
+let showExtra = false;
+let reportFieldId = null;
+
+function setView(v){ view=v; render(); }
+document.getElementById("tabCount").onclick    = ()=>{ sizeType=null; showExtra=false; setView("count"); };
+document.getElementById("tabReport").onclick   = ()=>{ reportFieldId = S.activeField; setView("report"); };
+document.getElementById("tabSettings").onclick = ()=>setView("settings");
+
+function render(){
+  ["tabCount","tabReport","tabSettings"].forEach(id=>document.getElementById(id).classList.remove("active"));
+  if(view==="count"||view==="size") document.getElementById("tabCount").classList.add("active");
+  if(view==="report") document.getElementById("tabReport").classList.add("active");
+  if(view==="settings") document.getElementById("tabSettings").classList.add("active");
+  if(view==="count") renderCount();
+  else if(view==="size") renderSize();
+  else if(view==="report") renderReport();
+  else renderSettings();
+}
+
+/* ---------- Zählseite ---------- */
+function lastEntryText(sub){
+  const k = sub.log[sub.log.length-1];
+  if(!k) return "Noch kein Eintrag in diesem Bereich";
+  const p = k.split("|");
+  const t = S.types.find(t=>t.id===p[0]);
+  if(!t) return "Zuletzt: <b>?</b>";
+  const s = findSize(t, p[1]);
+  return "Zuletzt: <b>" + esc(t.name) + (t.sizes.length>1 && s ? " · " + esc(s.label) : "") + "</b>";
+}
+function renderCount(){
+  const f = curField(), sub = curSub();
+  app.innerHTML = `
+    <header>
+      <div class="ctx">
+        <select id="selField">${S.fields.map(x=>`<option value="${x.id}" ${x.id===f.id?"selected":""}>📍 ${esc(x.name)}</option>`).join("")}</select>
+        <select id="selSub">${f.subs.map(x=>`<option value="${x.id}" ${x.id===sub.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>
+      </div>
+    </header>
+    <div class="undobar">
+      <div class="last">${lastEntryText(sub)} &nbsp;·&nbsp; Bereich gesamt: <b>${subTotal(sub)}</b></div>
+      <button id="btnUndo" ${sub.log.length? "":"disabled"}>↩︎ Rückgängig</button>
+    </div>
+    <div class="grid" style="grid-template-rows:repeat(${Math.ceil(S.types.length/2)},1fr)">
+      ${S.types.map(t=>`
+        <button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
+          <span class="tcount">${typeTotalInSub(sub,t.id)}</span>
+          <span class="tname">${esc(t.name)}</span>
+          <span class="tsub">${t.sizes.length>1 ? "Größe wählen →" : esc(t.sizes[0]?t.sizes[0].label:"")}</span>
+        </button>`).join("")}
+    </div>`;
+  document.getElementById("selField").onchange = e=>{ S.activeField=e.target.value; ensureActiveSub(); save(); render(); };
+  document.getElementById("selSub").onchange   = e=>{ S.activeSub=e.target.value; save(); render(); };
+  document.getElementById("btnUndo").onclick   = undo;
+  app.querySelectorAll(".tile").forEach(btn=>{
+    btn.onclick = ()=>{
+      const t = S.types.find(t=>t.id===btn.dataset.type);
+      if(!t || !t.sizes.length) return;
+      if(t.sizes.length===1){
+        addCount(t.id, t.sizes[0].id);
+        btn.classList.remove("flash"); void btn.offsetWidth; btn.classList.add("flash");
+        btn.querySelector(".tcount").textContent = typeTotalInSub(curSub(), t.id);
+        const bar = document.querySelector(".undobar .last");
+        if(bar){ bar.innerHTML = lastEntryText(curSub()) + " &nbsp;·&nbsp; Bereich gesamt: <b>" + subTotal(curSub()) + "</b>"; }
+        document.getElementById("btnUndo").disabled = false;
+      } else { sizeType=t.id; showExtra=false; setView("size"); }
+    };
+  });
+}
+
+/* ---------- Größenseite ---------- */
+function renderSize(){
+  const t = S.types.find(t=>t.id===sizeType);
+  if(!t){ setView("count"); return; }
+  const main  = t.sizes.filter(s=>!s.extra);
+  const extra = t.sizes.filter(s=>s.extra);
+  const shown = showExtra ? extra : main;
+  const moreBtn = (!showExtra && extra.length>0);
+  const rows = shown.length + (moreBtn?1:0);
+
+  app.innerHTML = `
+    <div class="sizehead" style="${tileStyle(t.color, t.img)}">${esc(t.name)} – Größe wählen${showExtra?" (große Bäume)":""}</div>
+    <div class="sizes" style="grid-template-rows:repeat(${Math.max(rows,1)},1fr)">
+      ${shown.map(s=>`
+        <button class="tile" data-sid="${s.id}" style="${tileStyle(s.color||t.color, s.img||null)}">
+          <span class="tname">${esc(s.label)}</span>
+        </button>`).join("")}
+      ${moreBtn?`<button class="tile moretile" id="btnMore"><span class="tname" style="font-size:22px;">Mehr… (${extra.map(x=>esc(x.label)).join(" · ")})</span></button>`:""}
+    </div>
+    <button class="backbtn" id="btnBack">${showExtra?"← Zurück zu den Standardgrößen":"✕ Abbrechen (zurück ohne Speichern)"}</button>`;
+
+  app.querySelectorAll(".tile[data-sid]").forEach(btn=>{
+    btn.onclick = ()=>{ addCount(t.id, btn.dataset.sid); sizeType=null; showExtra=false; setView("count"); };
+  });
+  const more = document.getElementById("btnMore");
+  if(more) more.onclick = ()=>{ showExtra=true; render(); };
+  document.getElementById("btnBack").onclick = ()=>{
+    if(showExtra){ showExtra=false; render(); }
+    else { sizeType=null; setView("count"); }
+  };
+}
+
+/* ---------- Bericht ---------- */
+function renderReport(){
+  if(!reportFieldId || !S.fields.find(f=>f.id===reportFieldId)) reportFieldId = S.activeField;
+  const f = S.fields.find(f=>f.id===reportFieldId);
+  const fieldAgg = {};
+  f.subs.forEach(sub=>{ for(const k in sub.counts) fieldAgg[k]=(fieldAgg[k]||0)+sub.counts[k]; });
+  const fieldTotal = Object.values(fieldAgg).reduce((a,b)=>a+b,0);
+
+  let html = `
+    <div class="page">
+      <div class="row">
+        <select id="repField" class="grow" style="background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;font-size:16px;font-weight:600;padding:10px;">
+          ${S.fields.map(x=>`<option value="${x.id}" ${x.id===f.id?"selected":""}>📍 ${esc(x.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="card">
+        <h2 style="margin-top:0;">Gesamt: ${esc(f.name)} — <span style="color:var(--accent)">${fieldTotal} Bäume</span></h2>
+        ${fieldTotal? tableHTML(fieldAgg) : '<div class="muted">Noch keine Zählungen auf diesem Feld.</div>'}
+      </div>`;
+
+  f.subs.forEach(sub=>{
+    const rows = [];
+    S.types.forEach(t=>t.sizes.forEach(s=>{
+      const k = t.id+"|"+s.id, n = sub.counts[k]||0;
+      if(n>0) rows.push({t,s,n,k});
+    }));
+    html += `<div class="card">
+      <h2 style="margin-top:0;">${esc(sub.name)} — ${subTotal(sub)} Bäume</h2>
+      ${rows.length? `<table><tr><th>Qualität</th><th>Größe</th><th style="text-align:right">Anzahl</th><th></th></tr>
+        ${rows.map(r=>`<tr>
+          <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
+          <td>${esc(r.s.label)}</td>
+          <td class="num">${r.n}</td>
+          <td style="text-align:right"><span class="corr">
+            <button data-sub="${sub.id}" data-k="${r.k}" data-d="-1">−</button>
+            <button data-sub="${sub.id}" data-k="${r.k}" data-d="1">+</button>
+          </span></td>
+        </tr>`).join("")}</table>`
+      : '<div class="muted">Keine Einträge.</div>'}
+    </div>`;
+  });
+
+  html += `
+      <button class="btn primary wide" id="btnCsvField">⬇️ Excel-Export: nur „${esc(f.name)}“</button>
+      <button class="btn wide" id="btnCsvAll">⬇️ Excel-Export: alle Felder</button>
+      <p class="muted">Die CSV-Datei lässt sich direkt in Excel öffnen (Spalten: Feld, Unterbereich, Qualität, Größe, Anzahl).</p>
+    </div>`;
+  app.innerHTML = html;
+
+  document.getElementById("repField").onchange = e=>{ reportFieldId=e.target.value; render(); };
+  app.querySelectorAll(".corr button").forEach(b=>{
+    b.onclick = ()=>{
+      const sub = f.subs.find(s=>s.id===b.dataset.sub);
+      adjust(sub, b.dataset.k, +b.dataset.d);
+    };
+  });
+  document.getElementById("btnCsvField").onclick = ()=>exportCSV([f]);
+  document.getElementById("btnCsvAll").onclick   = ()=>exportCSV(S.fields);
+}
+function tableHTML(agg){
+  let rows="";
+  S.types.forEach(t=>t.sizes.forEach(s=>{
+    const n = agg[t.id+"|"+s.id]||0;
+    if(n>0) rows += `<tr><td><span class="dot" style="background:${t.color}"></span>${esc(t.name)}</td><td>${esc(s.label)}</td><td class="num">${n}</td></tr>`;
+  }));
+  return `<table><tr><th>Qualität</th><th>Größe</th><th style="text-align:right">Anzahl</th></tr>${rows}</table>`;
+}
+function exportCSV(fields){
+  let csv = "\uFEFFFeld;Unterbereich;Qualität;Größe;Anzahl\r\n";
+  fields.forEach(f=>{
+    f.subs.forEach(sub=>{
+      S.types.forEach(t=>t.sizes.forEach(s=>{
+        const n = sub.counts[t.id+"|"+s.id]||0;
+        if(n>0) csv += [f.name, sub.name, t.name, s.label, n].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
+      }));
+    });
+  });
+  const date = new Date().toISOString().slice(0,10);
+  const name = (fields.length===1 ? "Zaehlung_"+fields[0].name.replace(/[^\wäöüÄÖÜß-]+/g,"_") : "Zaehlung_alle_Felder") + "_" + date + ".csv";
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+
+/* ---------- Verwalten ---------- */
+function renderSettings(){
+  let html = `<div class="page">
+    <div class="card">
+      <h2 style="margin-top:0;">📍 Felder & Unterbereiche</h2>`;
+  S.fields.forEach(f=>{
+    html += `<div style="margin-bottom:14px;">
+      <div class="row">
+        <b class="grow" style="font-size:16px;">${esc(f.name)}</b>
+        <button class="btn small" data-act="renF" data-f="${f.id}">✏️</button>
+        <button class="btn small danger" data-act="delF" data-f="${f.id}">🗑</button>
+      </div>`;
+    f.subs.forEach(sub=>{
+      html += `<div class="row" style="padding-left:14px;">
+        <span class="grow">└ ${esc(sub.name)} <span class="muted">(${subTotal(sub)})</span></span>
+        <button class="btn small" data-act="renS" data-f="${f.id}" data-s="${sub.id}">✏️</button>
+        <button class="btn small danger" data-act="delS" data-f="${f.id}" data-s="${sub.id}">🗑</button>
+      </div>`;
+    });
+    html += `<div class="row" style="padding-left:14px;"><button class="btn small" data-act="addS" data-f="${f.id}">＋ Unterbereich</button></div>
+    </div>`;
+  });
+  html += `<button class="btn wide" data-act="addF">＋ Neues Feld anlegen</button></div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">🎨 Typen & Größen gestalten</h2>
+      <p class="muted">Pro Typ und pro Größe: Farbe wählen oder Foto hinterlegen (📷). Größen mit „Mehr“-Kennzeichen erscheinen erst nach Tippen auf die Mehr…-Taste (⤵︎/⤴︎ schaltet um).</p>`;
+  S.types.forEach(t=>{
+    html += `<div style="border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:12px;">
+      <div class="row">
+        ${t.img? `<span class="thumb" style="background-image:url('${t.img}')"></span>` : `<input type="color" value="${t.color}" data-act="colT" data-t="${t.id}">`}
+        <b class="grow" style="font-size:16px;">${esc(t.name)}</b>
+        <button class="btn small" data-act="imgT" data-t="${t.id}">📷</button>
+        <button class="btn small" data-act="renT" data-t="${t.id}">✏️</button>
+      </div>`;
+    t.sizes.forEach(s=>{
+      html += `<div class="row" style="padding-left:8px;">
+        ${s.img? `<span class="thumb" style="background-image:url('${s.img}')"></span>` : `<input type="color" value="${s.color||t.color}" data-act="colSz" data-t="${t.id}" data-sz="${s.id}">`}
+        <span class="grow" style="font-size:14px;">${esc(s.label)}${s.extra?'<span class="badge">Mehr</span>':""}</span>
+        <button class="btn small" data-act="imgSz" data-t="${t.id}" data-sz="${s.id}">📷</button>
+        <button class="btn small" data-act="extraSz" data-t="${t.id}" data-sz="${s.id}">${s.extra?"⤴︎":"⤵︎"}</button>
+        <button class="btn small" data-act="renSz" data-t="${t.id}" data-sz="${s.id}">✏️</button>
+        <button class="btn small danger" data-act="delSz" data-t="${t.id}" data-sz="${s.id}">🗑</button>
+      </div>`;
+    });
+    html += `<button class="btn small" data-act="addSz" data-t="${t.id}">＋ Größe</button>
+    </div>`;
+  });
+  html += `</div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">🛟 Datensicherung</h2>
+      <p class="muted">Alle Daten liegen lokal auf diesem Handy. Vor dem Löschen von Browser-/Websitedaten: erst CSV exportieren oder Sicherung erstellen.</p>
+      <button class="btn wide" id="btnBackup">⬇️ Sicherungsdatei erstellen</button>
+      <button class="btn wide" id="btnRestore">⬆️ Sicherung wiederherstellen</button>
+      <input type="file" id="fileRestore" accept=".json,application/json" class="hidden">
+      <button class="btn wide danger" id="btnReset">Alle Zählungen löschen…</button>
+    </div>
+  </div>`;
+  app.innerHTML = html;
+
+  app.querySelectorAll("[data-act]").forEach(el=>{
+    const act = el.dataset.act;
+    const getF  = ()=>S.fields.find(x=>x.id===el.dataset.f);
+    const getT  = ()=>S.types.find(x=>x.id===el.dataset.t);
+
+    if(act==="colT"){ el.onchange = ()=>{ getT().color = el.value; save(); render(); }; return; }
+    if(act==="colSz"){ el.onchange = ()=>{ const s=findSize(getT(), el.dataset.sz); s.color = el.value; save(); render(); }; return; }
+
+    el.onclick = async ()=>{
+      /* --- Felder --- */
+      if(act==="addF"){
+        const n = await askText("Name des neuen Feldes:", "Feld "+(S.fields.length+1));
+        if(n){ S.fields.push({id:uid(), name:n, subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]}); save(); render(); }
+      }
+      if(act==="renF"){
+        const f = getF(); const n = await askText("Feld umbenennen:", f.name);
+        if(n){ f.name=n; save(); render(); }
+      }
+      if(act==="delF"){
+        const f = getF();
+        if(S.fields.length<=1){ await askConfirm("Mindestens ein Feld muss bestehen bleiben.","Verstanden"); return; }
+        const total = f.subs.reduce((a,s)=>a+subTotal(s),0);
+        if(await askConfirm(`Feld „${f.name}“ mit ${total} Zählungen wirklich löschen?`, "Löschen", true)){
+          S.fields = S.fields.filter(x=>x.id!==f.id);
+          if(S.activeField===f.id){ S.activeField=S.fields[0].id; ensureActiveSub(); }
+          save(); render();
+        }
+      }
+      /* --- Unterbereiche --- */
+      if(act==="addS"){
+        const f = getF();
+        const n = await askText("Name des Unterbereichs:", "Bereich "+String.fromCharCode(65+f.subs.length));
+        if(n){ f.subs.push({id:uid(), name:n, counts:{}, log:[]}); save(); render(); }
+      }
+      if(act==="renS" || act==="delS"){
+        const f = getF(); const sub = f.subs.find(x=>x.id===el.dataset.s);
+        if(act==="renS"){
+          const n = await askText("Unterbereich umbenennen:", sub.name);
+          if(n){ sub.name=n; save(); render(); }
+        } else {
+          if(f.subs.length<=1){ await askConfirm("Jedes Feld braucht mindestens einen Unterbereich.","Verstanden"); return; }
+          if(await askConfirm(`„${sub.name}“ mit ${subTotal(sub)} Zählungen wirklich löschen?`, "Löschen", true)){
+            f.subs = f.subs.filter(x=>x.id!==sub.id);
+            if(S.activeSub===sub.id) ensureActiveSub();
+            save(); render();
+          }
+        }
+      }
+      /* --- Typen --- */
+      if(act==="renT"){
+        const t = getT(); const n = await askText("Typ-Name:", t.name);
+        if(n){ t.name=n; save(); render(); }
+      }
+      if(act==="imgT"){
+        const t = getT();
+        if(t.img){
+          const c = await askChoice("Foto für „"+t.name+"“", ["Neues Foto wählen","Foto entfernen (Farbe verwenden)"]);
+          if(c===1){ t.img=null; save(); render(); return; }
+          if(c!==0) return;
+        }
+        const d = await pickImage();
+        if(d){ t.img=d; save(); render(); }
+      }
+      /* --- Größen --- */
+      if(act==="renSz"){
+        const t=getT(); const s=findSize(t, el.dataset.sz);
+        const n = await askText("Größe umbenennen:", s.label);
+        if(n){ s.label=n; save(); render(); }
+      }
+      if(act==="imgSz"){
+        const t=getT(); const s=findSize(t, el.dataset.sz);
+        if(s.img){
+          const c = await askChoice("Foto für Größe „"+s.label+"“", ["Neues Foto wählen","Foto entfernen (Farbe verwenden)"]);
+          if(c===1){ s.img=null; save(); render(); return; }
+          if(c!==0) return;
+        }
+        const d = await pickImage();
+        if(d){ s.img=d; save(); render(); }
+      }
+      if(act==="extraSz"){
+        const t=getT(); const s=findSize(t, el.dataset.sz);
+        s.extra = !s.extra;
+        save(); render();
+      }
+      if(act==="delSz"){
+        const t=getT(); const s=findSize(t, el.dataset.sz);
+        if(t.sizes.length<=1){ await askConfirm("Jeder Typ braucht mindestens eine Größe.","Verstanden"); return; }
+        let n=0; S.fields.forEach(f=>f.subs.forEach(sub=>{ n += sub.counts[t.id+"|"+s.id]||0; }));
+        if(await askConfirm(`Größe „${s.label}“ löschen? ${n} vorhandene Zählungen dieser Größe werden mitgelöscht.`, "Löschen", true)){
+          t.sizes = t.sizes.filter(x=>x.id!==s.id);
+          S.fields.forEach(f=>f.subs.forEach(sub=>{
+            delete sub.counts[t.id+"|"+s.id];
+            sub.log = sub.log.filter(k=>k!==t.id+"|"+s.id);
+          }));
+          save(); render();
+        }
+      }
+      if(act==="addSz"){
+        const t=getT();
+        const n = await askText("Neue Größe (z. B. 2 – 2,5 m):", "");
+        if(n){ t.sizes.push({id:uid(), label:n, color:null, img:null, extra:false}); save(); render(); }
+      }
+    };
+  });
+
+  document.getElementById("btnBackup").onclick = ()=>{
+    const blob = new Blob([JSON.stringify(S)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "Baumzaehler_Sicherung_" + new Date().toISOString().slice(0,10) + ".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  };
+  document.getElementById("btnRestore").onclick = ()=>document.getElementById("fileRestore").click();
+  document.getElementById("fileRestore").onchange = e=>{
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = async ()=>{
+      try{
+        const s = JSON.parse(r.result);
+        if(!s.types || !s.fields) throw 0;
+        if(await askConfirm("Aktuelle Daten durch die Sicherung ersetzen?", "Wiederherstellen", true)){
+          S = s; ensureActiveSub(); save(); render();
+        }
+      }catch(_){ await askConfirm("Datei konnte nicht gelesen werden.","Verstanden"); }
+    };
+    r.readAsText(file);
+  };
+  document.getElementById("btnReset").onclick = async ()=>{
+    if(await askConfirm("Wirklich ALLE Zählungen in ALLEN Feldern auf 0 setzen? Felder, Typen und Fotos bleiben erhalten.", "Weiter", true)){
+      if(await askConfirm("Letzte Sicherheitsfrage: Zählungen unwiderruflich löschen?", "Ja, alles löschen", true)){
+        S.fields.forEach(f=>f.subs.forEach(s=>{ s.counts={}; s.log=[]; }));
+        save(); render();
+      }
+    }
+  };
+}
+
+render();
+
+/* Offline-Fähigkeit: Service Worker registrieren (nur bei https-Hosting aktiv) */
+if("serviceWorker" in navigator && location.protocol==="https:"){
+  navigator.serviceWorker.register("sw.js").catch(function(){});
+}
+</script>
+</body>
+</html>

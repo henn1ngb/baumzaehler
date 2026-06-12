@@ -1,0 +1,16 @@
+{
+  "name": "Baumzähler",
+  "short_name": "Baumzähler",
+  "description": "Zählklicker für Weihnachtsbaumkulturen – offline nutzbar",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a2421",
+  "theme_color": "#1a2421",
+  "lang": "de",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
