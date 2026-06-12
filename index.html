@@ -57,20 +57,24 @@
     box-shadow:0 3px 0 rgba(0,0,0,.35);
   }
   .tile:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35);}
-  .tile .tname{font-size:clamp(20px,6vw,30px); line-height:1.1; text-shadow:0 1px 4px rgba(0,0,0,.55); text-align:center;}
-  .tile .tsub{font-size:13px; font-weight:600; opacity:.9; margin-top:4px; text-shadow:0 1px 3px rgba(0,0,0,.55);}
+  .tile .tname{font-size:clamp(19px,5.5vw,28px); line-height:1.1; text-shadow:0 1px 4px rgba(0,0,0,.6); text-align:center;}
+  .tile .tsub{font-size:12px; font-weight:600; opacity:.9; margin-top:3px; text-shadow:0 1px 3px rgba(0,0,0,.6);}
   .tile .tcount{
-    position:absolute; top:6px; right:9px; font-size:14px; font-weight:700;
-    background:rgba(0,0,0,.38); border-radius:99px; padding:2px 9px;
+    position:absolute; top:5px; right:8px; font-size:13px; font-weight:700;
+    background:rgba(0,0,0,.38); border-radius:99px; padding:2px 8px;
   }
-  .tile.moretile{background:var(--panel); border:2px dashed var(--line); color:var(--text); box-shadow:none;}
+  .tile.flagtile{box-shadow:inset 0 0 0 2px rgba(255,255,255,.18), 0 3px 0 rgba(0,0,0,.35);}
+  .tile.flagtile .tname{font-size:clamp(16px,4.8vw,22px);}
+  .tile.armed{outline:4px solid var(--accent); outline-offset:-4px;}
+  .tile.disabledtile{opacity:.3; pointer-events:none;}
+  .tile.emptycell{background:transparent; box-shadow:none; pointer-events:none;}
   .flash{animation:flash .25s ease;}
   @keyframes flash{0%{filter:brightness(1.7);}100%{filter:brightness(1);}}
   @media (prefers-reduced-motion: reduce){ .flash{animation:none;} .tile:active{transform:none;} }
 
   .sizehead{
     margin:10px 12px 0; padding:14px; border-radius:var(--radius);
-    font-size:20px; font-weight:800; color:#fff; text-align:center; text-shadow:0 1px 4px rgba(0,0,0,.5);
+    font-size:19px; font-weight:800; color:#fff; text-align:center; text-shadow:0 1px 4px rgba(0,0,0,.55);
   }
   .sizes{flex:1; min-height:0; display:grid; gap:10px; padding:10px 12px;}
   .sizes .tile .tname{font-size:clamp(22px,7vw,34px);}
@@ -83,11 +87,11 @@
   .page{flex:1; min-height:0; overflow-y:auto; padding:12px; -webkit-overflow-scrolling:touch;}
   .page h2{font-size:18px; margin:14px 0 8px;}
   .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:12px;}
-  table{width:100%; border-collapse:collapse; font-size:15px;}
-  th,td{text-align:left; padding:7px 4px; border-bottom:1px solid var(--line);}
-  th{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em;}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  th,td{text-align:left; padding:7px 3px; border-bottom:1px solid var(--line);}
+  th{color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.03em;}
   td.num{text-align:right; font-variant-numeric:tabular-nums; font-weight:700;}
-  .dot{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:7px;}
+  .dot{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px;}
   .row{display:flex; gap:7px; align-items:center; margin-bottom:8px; flex-wrap:nowrap;}
   .row .grow{flex:1; min-width:0; overflow:hidden;}
   .btn{
@@ -100,11 +104,13 @@
   .btn.wide{width:100%; margin-top:6px;}
   .muted{color:var(--muted); font-size:13px; line-height:1.4;}
   .corr{display:inline-flex; gap:6px;}
-  .corr button{width:34px; height:34px; border-radius:8px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:18px; font-weight:800;}
+  .corr button{width:32px; height:32px; border-radius:8px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:17px; font-weight:800;}
   input[type=text]{background:var(--bg); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:11px; font-size:16px; width:100%;}
   input[type=color]{border:1px solid var(--line); background:var(--panel2); border-radius:8px; width:40px; height:38px; padding:2px; flex:none;}
+  select.mini{background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 6px; font-size:14px; font-weight:600; min-width:0;}
   .thumb{width:38px; height:38px; border-radius:8px; background-size:cover; background-position:center; flex:none; border:1px solid var(--line);}
-  .badge{font-size:11px; background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:2px 6px; color:var(--muted); margin-left:5px; vertical-align:middle;}
+  .badge{font-size:11px; background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:2px 6px; color:var(--muted); margin-left:5px; vertical-align:middle; white-space:nowrap;}
+  .fbadge{font-size:11px; border-radius:6px; padding:2px 6px; color:#fff; margin-left:5px; vertical-align:middle; white-space:nowrap;}
   .warn{background:#5a3a16; border:1px solid #a9762d; color:#ffd9a0; border-radius:10px; padding:10px 12px; margin:10px 12px 0; font-size:13px; line-height:1.4;}
   .hidden{display:none !important;}
   footer.tabs{display:flex; border-top:1px solid var(--line); background:var(--panel);}
@@ -114,7 +120,6 @@
   }
   footer.tabs button.active{color:var(--accent);}
 
-  /* Eigene Dialoge (ersetzen prompt/confirm, die auf manchen Handys blockiert werden) */
   .overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;
     display:flex; align-items:center; justify-content:center; padding:20px;
@@ -132,7 +137,7 @@
 </head>
 <body>
 <div id="storageWarn" class="warn hidden">
-  ⚠️ Dauerhaftes Speichern ist hier nicht möglich. Bitte die Datei <b>im Browser (Chrome/Safari) öffnen</b>, nicht in einer Vorschau – sonst gehen Zählungen beim Schließen verloren.
+  ⚠️ Dauerhaftes Speichern ist hier nicht möglich. Bitte die App <b>im Browser bzw. über das Home-Bildschirm-Icon öffnen</b> – sonst gehen Zählungen beim Schließen verloren.
 </div>
 <div id="app"></div>
 <footer class="tabs">
@@ -149,9 +154,16 @@ function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toStri
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function tileStyle(color, img){
   return img
-    ? "background-image:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.42)),url('"+img+"');background-size:cover;background-position:center;background-color:"+color+";"
+    ? "background-image:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.38)),url('"+img+"');background-size:cover;background-position:center;background-color:"+color+";"
     : "background:"+color+";";
 }
+/* Streifenmuster als eingebaute Grafiken */
+function svgURI(svg){ return "data:image/svg+xml;utf8," + encodeURIComponent(svg); }
+const PAT = {
+  rotweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#d22a2a" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>'),
+  gelbweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#e8c61e"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>'),
+  gruenweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#1d4d22"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>')
+};
 
 /* ================= Eigene Dialoge ================= */
 function buildOverlay(inner){
@@ -216,90 +228,131 @@ function pickImage(){
   });
 }
 
-/* ================= Speicher & Migration ================= */
-const KEY = "baumzaehler_v2";
-const OLDKEY = "baumzaehler_v1";
+/* ================= Standarddaten (Henning-Konfiguration) ================= */
+const KEY = "baumzaehler_v3";
+const OLDKEYS = ["baumzaehler_v2","baumzaehler_v1"];
 let storageOK = true;
 try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); }
 catch(e){ storageOK = false; document.getElementById("storageWarn").classList.remove("hidden"); }
 let memFallback = null;
 
-function sz(label, extra){ return {id:uid(), label:label, color:null, img:null, extra:!!extra}; }
+function sz(label, opts){
+  opts = opts||{};
+  return {id:uid(), label:label, color:opts.color||null, img:opts.img||null, extra:!!opts.extra};
+}
 
 function defaultState(){
-  return {
-    v:2,
+  const s = {
+    v:3,
     types:[
-      {id:"mue", name:"Müll",  color:"#c4453c", img:null, sizes:[ sz("1 – 6 m") ]},
-      {id:"u",   name:"U",     color:"#6f7d78", img:null, sizes:[ sz("0 – 0,5 m"), sz("0,5 – 1 m") ]},
-      {id:"son", name:"Sonder",color:"#e08a2e", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
-      {id:"vog", name:"Vogel", color:"#3f6fd1", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]},
-      {id:"nm1", name:"NM 1",  color:"#1f8a3b", img:null, sizes:[
-        sz("3,5 – 6 m", true), sz("2,6 – 3,5 m", true),
-        sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m")
+      {id:"son", name:"Sonder",     color:"#0a2f8c", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
+      {id:"mue", name:"Müll",       color:"#7a1010", img:null, sizes:[ sz("0 – 1,5 m") ]},
+      {id:"blf", name:"Blaufichte", color:"#103a52", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m") ]},
+      {id:"u",   name:"U",          color:"#6f7d78", img:null, sizes:[
+        sz("NM 0,5 – 1 m",  {color:"#59872c"}),
+        sz("NM 0 – 0,5 m",  {color:"#6f9a33"}),
+        sz("Blau 0,5 – 1 m",{color:"#1d6e8e"}),
+        sz("Blau 0 – 0,5 m",{color:"#2196c4"})
       ]},
-      {id:"nm2", name:"NM 2",  color:"#3aa6a0", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m") ]}
+      {id:"nm1", name:"NM 1",       color:"#59872c", img:null, sizes:[
+        sz("3,5 – 6 m",   {extra:true}),
+        sz("2,6 – 3,5 m", {extra:true}),
+        sz("2 – 2,5 m",   {img:PAT.rotweiss}),
+        sz("1,75 – 2 m",  {img:PAT.gelbweiss}),
+        sz("1,5 – 1,75 m",{color:"#f07800"}),
+        sz("1 – 1,5 m",   {img:PAT.gruenweiss})
+      ]},
+      {id:"nm2", name:"NM 2",       color:"#2e4d1e", img:null, sizes:[
+        sz("2 – 2,5 m",   {img:PAT.rotweiss}),
+        sz("1,75 – 2 m",  {img:PAT.gelbweiss}),
+        sz("1,5 – 1,75 m",{color:"#f07800"}),
+        sz("1 – 1,5 m",   {img:PAT.gruenweiss})
+      ]}
+    ],
+    flags:[
+      {id:"vogel", name:"Vögel", color:"#b02a64"},
+      {id:"laus",  name:"Läuse", color:"#aa6c1f"}
+    ],
+    layout:[
+      {h:"half", cells:["t:son","t:mue"]},
+      {h:"full", cells:["t:blf","t:u"]},
+      {h:"full", cells:["t:nm1","t:nm2"]},
+      {h:"half", cells:["f:vogel","f:laus"]}
     ],
     fields:[ {id:uid(), name:"Feld 1", subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]} ],
     activeField:null, activeSub:null
   };
+  return s;
 }
 
-function migrateV1(old){
-  // v1: Größen waren Text-Listen, Zähler über Index – umbauen auf feste IDs
+/* ---- Migration: Felder/Zählungen aus alten Versionen übernehmen ---- */
+function normTxt(x){ return String(x).toLowerCase().replace(/[\s–—\-_.]/g,""); }
+function migrateOld(old){
   const s = defaultState();
-  // Felder/Zählungen übernehmen
+  if(!old || !old.fields) return s;
+  // Zuordnung alter Typ/Größe -> neuer Schlüssel über Namen/Labels
+  const map = {};
+  (old.types||[]).forEach(ot=>{
+    const otn = normTxt(ot.name||ot.id||"");
+    // Kandidaten-Typen: Namensähnlichkeit zuerst
+    const cands = s.types.slice().sort((a,b)=>{
+      const am = (otn.includes(normTxt(a.name))||normTxt(a.name).includes(otn)) ? 0 : 1;
+      const bm = (otn.includes(normTxt(b.name))||normTxt(b.name).includes(otn)) ? 0 : 1;
+      return am-bm;
+    });
+    const sizes = ot.sizes||[];
+    sizes.forEach((os,i)=>{
+      const lbl = (typeof os==="string") ? os : (os.label||"");
+      const oln = normTxt(lbl);
+      let hit = null;
+      for(const nt of cands){
+        hit = nt.sizes.find(x=>{
+          const nn = normTxt(x.label);
+          return nn===oln || oln.endsWith(nn) || nn.endsWith(oln);
+        });
+        if(hit){ map[ot.id+"|"+((typeof os==="string")?i:os.id)] = nt.id+"|"+hit.id; break; }
+      }
+    });
+  });
   s.fields = old.fields.map(f=>({
     id:f.id, name:f.name,
-    subs:f.subs.map(sub=>({id:sub.id, name:sub.name, counts:{}, log:[], _old:sub.counts||{}}))
+    subs:(f.subs||[]).map(sub=>{
+      const counts = {}, log = [];
+      for(const k in (sub.counts||{})){
+        // alter Schlüssel evtl. schon mit Flag-Teil
+        const base = k.split("|").slice(0,2).join("|");
+        const nk = map[base];
+        if(nk) counts[nk+"|"] = (counts[nk+"|"]||0) + sub.counts[k];
+      }
+      (sub.log||[]).forEach(k=>{
+        const base = k.split("|").slice(0,2).join("|");
+        if(map[base]) log.push(map[base]+"|");
+      });
+      return {id:sub.id, name:sub.name, counts:counts, log:log};
+    })
   }));
-  // Index→ID-Zuordnung über die v1-Typdefinition aufbauen
-  const map = {}; // "altTyp|idx" -> "neuTyp|sizeId"
-  (old.types||[]).forEach(ot=>{
-    const newId = ot.id==="u1" ? "u" : ot.id;
-    const nt = s.types.find(t=>t.id===newId);
-    if(!nt) return;
-    (ot.sizes||[]).forEach((lbl,i)=>{
-      // Größe mit gleichem Label suchen, sonst erste Größe
-      let target = nt.sizes.find(x=>x.label.replace(/\s/g,"")===String(lbl).replace(/\s/g,""));
-      if(!target) target = nt.sizes[0];
-      map[ot.id+"|"+i] = nt.id+"|"+target.id;
-    });
-    // Farben übernehmen
-    if(ot.color) nt.color = ot.color;
-    if(ot.id!=="u1" && ot.name) nt.name = ot.name;
-  });
-  s.fields.forEach(f=>f.subs.forEach(sub=>{
-    for(const k in sub._old){
-      const nk = map[k]; if(!nk) continue;
-      sub.counts[nk] = (sub.counts[nk]||0) + sub._old[k];
-    }
-    delete sub._old;
-  }));
+  if(!s.fields.length) s.fields = defaultState().fields;
   s.activeField = old.activeField; s.activeSub = old.activeSub;
   return s;
+}
+function normalize(s){
+  if(s && s.v===3 && s.types && s.flags && s.layout && s.fields) return s;
+  return migrateOld(s);
 }
 
 function load(){
   if(!storageOK){ if(!memFallback) memFallback = defaultState(); return memFallback; }
   try{
     const raw = localStorage.getItem(KEY);
-    if(raw){ const s = JSON.parse(raw); if(s && s.types && s.fields) return s; }
-    const old = localStorage.getItem(OLDKEY);
-    if(old){ const o = JSON.parse(old); if(o && o.types && o.fields) return migrateV1(o); }
+    if(raw){ const s = JSON.parse(raw); if(s && s.fields) return normalize(s); }
+    for(const ok of OLDKEYS){
+      const old = localStorage.getItem(ok);
+      if(old){ const o = JSON.parse(old); if(o && o.fields) return migrateOld(o); }
+    }
   }catch(e){}
   return defaultState();
 }
 let S = load();
-/* Kachel-Reihenfolge: Müll & U oben, NM 1 & NM 2 unten (gilt auch für bestehende Daten) */
-(function(){
-  const order = ["mue","u","son","vog","nm1","nm2"];
-  S.types.sort((a,b)=>{
-    let ia = order.indexOf(a.id), ib = order.indexOf(b.id);
-    if(ia<0) ia = 99; if(ib<0) ib = 99;
-    return ia - ib;
-  });
-})();
 if(!S.activeField || !S.fields.find(f=>f.id===S.activeField)) S.activeField = S.fields[0].id;
 ensureActiveSub();
 save();
@@ -319,14 +372,19 @@ function save(){
 function curField(){ return S.fields.find(f=>f.id===S.activeField); }
 function curSub(){ return curField().subs.find(s=>s.id===S.activeSub); }
 function findSize(t, sid){ return t.sizes.find(x=>x.id===sid); }
+function findFlag(fid){ return S.flags.find(x=>x.id===fid); }
 
-/* ================= Zähl-Logik ================= */
+/* ================= Zähl-Logik =================
+   Zähl-Schlüssel: typId|größenId|merkmalId  (merkmalId leer = normale Zählung) */
+let armedFlag = null; // Merkmal für die nächste Zählung
+
 function addCount(typeId, sizeId){
   const sub = curSub();
-  const k = typeId + "|" + sizeId;
+  const k = typeId + "|" + sizeId + "|" + (armedFlag||"");
   sub.counts[k] = (sub.counts[k]||0) + 1;
   sub.log.push(k);
   if(sub.log.length > 3000) sub.log.shift();
+  armedFlag = null;
   save();
   if(navigator.vibrate) navigator.vibrate(25);
 }
@@ -346,6 +404,10 @@ function adjust(sub, k, delta){
 function subTotal(sub){ return Object.values(sub.counts).reduce((a,b)=>a+b,0); }
 function typeTotalInSub(sub, typeId){
   let n=0; for(const k in sub.counts){ if(k.indexOf(typeId+"|")===0) n += sub.counts[k]; }
+  return n;
+}
+function flagTotalInSub(sub, flagId){
+  let n=0; for(const k in sub.counts){ if(k.split("|")[2]===flagId) n += sub.counts[k]; }
   return n;
 }
 
@@ -373,17 +435,47 @@ function render(){
 }
 
 /* ---------- Zählseite ---------- */
+function keyText(k){
+  const p = k.split("|");
+  const t = S.types.find(t=>t.id===p[0]);
+  if(!t) return "?";
+  const s = findSize(t, p[1]);
+  const fl = p[2] ? findFlag(p[2]) : null;
+  return esc(t.name) + (t.sizes.length>1 && s ? " · " + esc(s.label) : "") + (fl ? " · " + esc(fl.name) : "");
+}
 function lastEntryText(sub){
   const k = sub.log[sub.log.length-1];
   if(!k) return "Noch kein Eintrag in diesem Bereich";
-  const p = k.split("|");
-  const t = S.types.find(t=>t.id===p[0]);
-  if(!t) return "Zuletzt: <b>?</b>";
-  const s = findSize(t, p[1]);
-  return "Zuletzt: <b>" + esc(t.name) + (t.sizes.length>1 && s ? " · " + esc(s.label) : "") + "</b>";
+  return "Zuletzt: <b>" + keyText(k) + "</b>";
+}
+function cellHTML(ref, sub){
+  if(!ref) return '<div class="tile emptycell"></div>';
+  const kind = ref.slice(0,2), id = ref.slice(2);
+  if(kind==="t:"){
+    const t = S.types.find(x=>x.id===id);
+    if(!t) return '<div class="tile emptycell"></div>';
+    return `<button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
+      <span class="tcount">${typeTotalInSub(sub,t.id)}</span>
+      <span class="tname">${esc(t.name)}</span>
+      <span class="tsub">${t.sizes.length>1 ? "Größe wählen →" : esc(t.sizes[0]?t.sizes[0].label:"")}</span>
+    </button>`;
+  }
+  if(kind==="f:"){
+    const fl = findFlag(id);
+    if(!fl) return '<div class="tile emptycell"></div>';
+    const armed = armedFlag===fl.id;
+    const dis = armedFlag && armedFlag!==fl.id;
+    return `<button class="tile flagtile ${armed?"armed":""} ${dis?"disabledtile":""}" data-flag="${fl.id}" style="background:${fl.color}">
+      <span class="tcount">${flagTotalInSub(sub, fl.id)}</span>
+      <span class="tname">${esc(fl.name)}</span>
+      <span class="tsub">${armed ? "✓ aktiv – jetzt Typ wählen" : "Merkmal für nächste Zählung"}</span>
+    </button>`;
+  }
+  return '<div class="tile emptycell"></div>';
 }
 function renderCount(){
   const f = curField(), sub = curSub();
+  const rowsCSS = S.layout.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
   app.innerHTML = `
     <header>
       <div class="ctx">
@@ -392,32 +484,30 @@ function renderCount(){
       </div>
     </header>
     <div class="undobar">
-      <div class="last">${lastEntryText(sub)} &nbsp;·&nbsp; Bereich gesamt: <b>${subTotal(sub)}</b></div>
+      <div class="last">${lastEntryText(sub)} &nbsp;·&nbsp; Gesamt: <b>${subTotal(sub)}</b></div>
       <button id="btnUndo" ${sub.log.length? "":"disabled"}>↩︎ Rückgängig</button>
     </div>
-    <div class="grid" style="grid-template-rows:repeat(${Math.ceil(S.types.length/2)},1fr)">
-      ${S.types.map(t=>`
-        <button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
-          <span class="tcount">${typeTotalInSub(sub,t.id)}</span>
-          <span class="tname">${esc(t.name)}</span>
-          <span class="tsub">${t.sizes.length>1 ? "Größe wählen →" : esc(t.sizes[0]?t.sizes[0].label:"")}</span>
-        </button>`).join("")}
+    <div class="grid" style="grid-template-rows:${rowsCSS}">
+      ${S.layout.map(r=>cellHTML(r.cells[0],sub)+cellHTML(r.cells[1],sub)).join("")}
     </div>`;
-  document.getElementById("selField").onchange = e=>{ S.activeField=e.target.value; ensureActiveSub(); save(); render(); };
-  document.getElementById("selSub").onchange   = e=>{ S.activeSub=e.target.value; save(); render(); };
+  document.getElementById("selField").onchange = e=>{ S.activeField=e.target.value; ensureActiveSub(); armedFlag=null; save(); render(); };
+  document.getElementById("selSub").onchange   = e=>{ S.activeSub=e.target.value; armedFlag=null; save(); render(); };
   document.getElementById("btnUndo").onclick   = undo;
-  app.querySelectorAll(".tile").forEach(btn=>{
+  app.querySelectorAll(".tile[data-type]").forEach(btn=>{
     btn.onclick = ()=>{
       const t = S.types.find(t=>t.id===btn.dataset.type);
       if(!t || !t.sizes.length) return;
       if(t.sizes.length===1){
         addCount(t.id, t.sizes[0].id);
-        btn.classList.remove("flash"); void btn.offsetWidth; btn.classList.add("flash");
-        btn.querySelector(".tcount").textContent = typeTotalInSub(curSub(), t.id);
-        const bar = document.querySelector(".undobar .last");
-        if(bar){ bar.innerHTML = lastEntryText(curSub()) + " &nbsp;·&nbsp; Bereich gesamt: <b>" + subTotal(curSub()) + "</b>"; }
-        document.getElementById("btnUndo").disabled = false;
+        render(); // Flag-Status & Zähler aktualisieren
       } else { sizeType=t.id; showExtra=false; setView("size"); }
+    };
+  });
+  app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.flag;
+      armedFlag = (armedFlag===id) ? null : id;  // erneut tippen = abschalten
+      render();
     };
   });
 }
@@ -426,6 +516,7 @@ function renderCount(){
 function renderSize(){
   const t = S.types.find(t=>t.id===sizeType);
   if(!t){ setView("count"); return; }
+  const fl = armedFlag ? findFlag(armedFlag) : null;
   const main  = t.sizes.filter(s=>!s.extra);
   const extra = t.sizes.filter(s=>s.extra);
   const shown = showExtra ? extra : main;
@@ -433,9 +524,9 @@ function renderSize(){
   const rows = shown.length + (moreBtn?1:0);
 
   app.innerHTML = `
-    <div class="sizehead" style="${tileStyle(t.color, t.img)}">${esc(t.name)} – Größe wählen${showExtra?" (große Bäume)":""}</div>
+    <div class="sizehead" style="${tileStyle(t.color, t.img)}">${esc(t.name)} – Größe wählen${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}${showExtra?" (große Bäume)":""}</div>
     <div class="sizes" style="grid-template-rows:repeat(${Math.max(rows,1)},1fr)">
-      ${moreBtn?`<button class="tile moretile" id="btnMore"><span class="tname" style="font-size:22px;">Mehr… (${extra.map(x=>esc(x.label)).join(" · ")})</span></button>`:""}
+      ${moreBtn?`<button class="tile moretile" id="btnMore" style="background:var(--panel);border:2px dashed var(--line);box-shadow:none;"><span class="tname" style="font-size:22px;">Mehr… (${extra.map(x=>esc(x.label)).join(" · ")})</span></button>`:""}
       ${shown.map(s=>`
         <button class="tile" data-sid="${s.id}" style="${tileStyle(s.color||t.color, s.img||null)}">
           <span class="tname">${esc(s.label)}</span>
@@ -455,6 +546,20 @@ function renderSize(){
 }
 
 /* ---------- Bericht ---------- */
+function allCountRows(counts){
+  // sortiert nach Typ-/Größen-Reihenfolge, dann Merkmal (leer zuerst)
+  const rows = [];
+  const flagOrder = [""].concat(S.flags.map(f=>f.id));
+  S.types.forEach(t=>t.sizes.forEach(s=>{
+    flagOrder.forEach(fid=>{
+      const k = t.id+"|"+s.id+"|"+fid;
+      const n = counts[k]||0;
+      if(n>0) rows.push({t,s,fid,n,k});
+    });
+  }));
+  return rows;
+}
+function flagName(fid){ const f=findFlag(fid); return f?f.name:""; }
 function renderReport(){
   if(!reportFieldId || !S.fields.find(f=>f.id===reportFieldId)) reportFieldId = S.activeField;
   const f = S.fields.find(f=>f.id===reportFieldId);
@@ -475,17 +580,14 @@ function renderReport(){
       </div>`;
 
   f.subs.forEach(sub=>{
-    const rows = [];
-    S.types.forEach(t=>t.sizes.forEach(s=>{
-      const k = t.id+"|"+s.id, n = sub.counts[k]||0;
-      if(n>0) rows.push({t,s,n,k});
-    }));
+    const rows = allCountRows(sub.counts);
     html += `<div class="card">
       <h2 style="margin-top:0;">${esc(sub.name)} — ${subTotal(sub)} Bäume</h2>
-      ${rows.length? `<table><tr><th>Qualität</th><th>Größe</th><th style="text-align:right">Anzahl</th><th></th></tr>
+      ${rows.length? `<table><tr><th>Qualität</th><th>Größe</th><th>Merkmal</th><th style="text-align:right">Anzahl</th><th></th></tr>
         ${rows.map(r=>`<tr>
           <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
           <td>${esc(r.s.label)}</td>
+          <td>${r.fid?`<span class="fbadge" style="background:${(findFlag(r.fid)||{}).color||'#666'}">${esc(flagName(r.fid))}</span>`:""}</td>
           <td class="num">${r.n}</td>
           <td style="text-align:right"><span class="corr">
             <button data-sub="${sub.id}" data-k="${r.k}" data-d="-1">−</button>
@@ -499,7 +601,7 @@ function renderReport(){
   html += `
       <button class="btn primary wide" id="btnCsvField">⬇️ Excel-Export: nur „${esc(f.name)}“</button>
       <button class="btn wide" id="btnCsvAll">⬇️ Excel-Export: alle Felder</button>
-      <p class="muted">Die CSV-Datei lässt sich direkt in Excel öffnen (Spalten: Feld, Unterbereich, Qualität, Größe, Anzahl).</p>
+      <p class="muted">CSV-Spalten: Feld; Unterbereich; Qualität; Größe; Merkmal; Anzahl. Merkmal ist leer bei normalen Zählungen.</p>
     </div>`;
   app.innerHTML = html;
 
@@ -514,21 +616,23 @@ function renderReport(){
   document.getElementById("btnCsvAll").onclick   = ()=>exportCSV(S.fields);
 }
 function tableHTML(agg){
-  let rows="";
-  S.types.forEach(t=>t.sizes.forEach(s=>{
-    const n = agg[t.id+"|"+s.id]||0;
-    if(n>0) rows += `<tr><td><span class="dot" style="background:${t.color}"></span>${esc(t.name)}</td><td>${esc(s.label)}</td><td class="num">${n}</td></tr>`;
-  }));
-  return `<table><tr><th>Qualität</th><th>Größe</th><th style="text-align:right">Anzahl</th></tr>${rows}</table>`;
+  const rows = allCountRows(agg);
+  return `<table><tr><th>Qualität</th><th>Größe</th><th>Merkmal</th><th style="text-align:right">Anzahl</th></tr>
+    ${rows.map(r=>`<tr>
+      <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
+      <td>${esc(r.s.label)}</td>
+      <td>${r.fid?`<span class="fbadge" style="background:${(findFlag(r.fid)||{}).color||'#666'}">${esc(flagName(r.fid))}</span>`:""}</td>
+      <td class="num">${r.n}</td>
+    </tr>`).join("")}</table>`;
 }
 function exportCSV(fields){
-  let csv = "\uFEFFFeld;Unterbereich;Qualität;Größe;Anzahl\r\n";
+  let csv = "\uFEFFFeld;Unterbereich;Qualität;Größe;Merkmal;Anzahl\r\n";
   fields.forEach(f=>{
     f.subs.forEach(sub=>{
-      S.types.forEach(t=>t.sizes.forEach(s=>{
-        const n = sub.counts[t.id+"|"+s.id]||0;
-        if(n>0) csv += [f.name, sub.name, t.name, s.label, n].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
-      }));
+      allCountRows(sub.counts).forEach(r=>{
+        csv += [f.name, sub.name, r.t.name, r.s.label, flagName(r.fid), r.n]
+          .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
+      });
     });
   });
   const date = new Date().toISOString().slice(0,10);
@@ -541,8 +645,42 @@ function exportCSV(fields){
 }
 
 /* ---------- Verwalten ---------- */
+function cellOptions(sel){
+  let html = `<option value="" ${!sel?"selected":""}>— leer —</option>`;
+  S.types.forEach(t=>{ html += `<option value="t:${t.id}" ${sel==="t:"+t.id?"selected":""}>${esc(t.name)}</option>`; });
+  S.flags.forEach(fl=>{ html += `<option value="f:${fl.id}" ${sel==="f:"+fl.id?"selected":""}>🏳️ ${esc(fl.name)}</option>`; });
+  return html;
+}
 function renderSettings(){
   let html = `<div class="page">
+    <div class="card">
+      <h2 style="margin-top:0;">📐 Zählseite anordnen</h2>
+      <p class="muted">Jede Zeile hat zwei Plätze (links/rechts) und eine Höhe: <b>1</b> = normale Kachel, <b>½</b> = halbe Höhe. Reihenfolge mit ↑/↓ ändern. Änderungen wirken sofort auf der Zählseite.</p>`;
+  S.layout.forEach((r,i)=>{
+    html += `<div class="row">
+      <select class="mini grow" data-lay="cell" data-i="${i}" data-c="0">${cellOptions(r.cells[0])}</select>
+      <select class="mini grow" data-lay="cell" data-i="${i}" data-c="1">${cellOptions(r.cells[1])}</select>
+      <button class="btn small" data-lay="h" data-i="${i}">${r.h==="half"?"½":"1"}</button>
+      <button class="btn small" data-lay="up" data-i="${i}" ${i===0?"disabled":""}>↑</button>
+      <button class="btn small" data-lay="dn" data-i="${i}" ${i===S.layout.length-1?"disabled":""}>↓</button>
+      <button class="btn small danger" data-lay="del" data-i="${i}">🗑</button>
+    </div>`;
+  });
+  html += `<button class="btn small" id="btnAddRow">＋ Zeile</button>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">🏳️ Merkmale (Flags)</h2>
+      <p class="muted">Merkmal antippen → die nächste Zählung wird damit markiert. Im Bericht/Export eigene Spalte; leer = normale Zählung.</p>`;
+  S.flags.forEach(fl=>{
+    html += `<div class="row">
+      <input type="color" value="${fl.color}" data-act="colFl" data-fl="${fl.id}">
+      <b class="grow" style="font-size:16px;">${esc(fl.name)}</b>
+      <button class="btn small" data-act="renFl" data-fl="${fl.id}">✏️</button>
+    </div>`;
+  });
+  html += `</div>
+
     <div class="card">
       <h2 style="margin-top:0;">📍 Felder & Unterbereiche</h2>`;
   S.fields.forEach(f=>{
@@ -601,16 +739,43 @@ function renderSettings(){
   </div>`;
   app.innerHTML = html;
 
+  /* Layout-Editor */
+  app.querySelectorAll("[data-lay]").forEach(el=>{
+    const i = +el.dataset.i;
+    const kind = el.dataset.lay;
+    if(kind==="cell"){
+      el.onchange = ()=>{ S.layout[i].cells[+el.dataset.c] = el.value || null; save(); };
+      return;
+    }
+    el.onclick = ()=>{
+      if(kind==="h"){ S.layout[i].h = (S.layout[i].h==="half" ? "full" : "half"); }
+      if(kind==="up" && i>0){ const x=S.layout[i]; S.layout[i]=S.layout[i-1]; S.layout[i-1]=x; }
+      if(kind==="dn" && i<S.layout.length-1){ const x=S.layout[i]; S.layout[i]=S.layout[i+1]; S.layout[i+1]=x; }
+      if(kind==="del"){
+        if(S.layout.length<=1) return;
+        S.layout.splice(i,1);
+      }
+      save(); render();
+    };
+  });
+  document.getElementById("btnAddRow").onclick = ()=>{ S.layout.push({h:"full", cells:[null,null]}); save(); render(); };
+
+  /* übrige Verwaltung */
   app.querySelectorAll("[data-act]").forEach(el=>{
     const act = el.dataset.act;
     const getF  = ()=>S.fields.find(x=>x.id===el.dataset.f);
     const getT  = ()=>S.types.find(x=>x.id===el.dataset.t);
+    const getFl = ()=>findFlag(el.dataset.fl);
 
     if(act==="colT"){ el.onchange = ()=>{ getT().color = el.value; save(); render(); }; return; }
     if(act==="colSz"){ el.onchange = ()=>{ const s=findSize(getT(), el.dataset.sz); s.color = el.value; save(); render(); }; return; }
+    if(act==="colFl"){ el.onchange = ()=>{ getFl().color = el.value; save(); render(); }; return; }
 
     el.onclick = async ()=>{
-      /* --- Felder --- */
+      if(act==="renFl"){
+        const fl = getFl(); const n = await askText("Merkmal umbenennen:", fl.name);
+        if(n){ fl.name=n; save(); render(); }
+      }
       if(act==="addF"){
         const n = await askText("Name des neuen Feldes:", "Feld "+(S.fields.length+1));
         if(n){ S.fields.push({id:uid(), name:n, subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]}); save(); render(); }
@@ -629,7 +794,6 @@ function renderSettings(){
           save(); render();
         }
       }
-      /* --- Unterbereiche --- */
       if(act==="addS"){
         const f = getF();
         const n = await askText("Name des Unterbereichs:", "Bereich "+String.fromCharCode(65+f.subs.length));
@@ -649,7 +813,6 @@ function renderSettings(){
           }
         }
       }
-      /* --- Typen --- */
       if(act==="renT"){
         const t = getT(); const n = await askText("Typ-Name:", t.name);
         if(n){ t.name=n; save(); render(); }
@@ -664,7 +827,6 @@ function renderSettings(){
         const d = await pickImage();
         if(d){ t.img=d; save(); render(); }
       }
-      /* --- Größen --- */
       if(act==="renSz"){
         const t=getT(); const s=findSize(t, el.dataset.sz);
         const n = await askText("Größe umbenennen:", s.label);
@@ -673,7 +835,7 @@ function renderSettings(){
       if(act==="imgSz"){
         const t=getT(); const s=findSize(t, el.dataset.sz);
         if(s.img){
-          const c = await askChoice("Foto für Größe „"+s.label+"“", ["Neues Foto wählen","Foto entfernen (Farbe verwenden)"]);
+          const c = await askChoice("Bild für Größe „"+s.label+"“", ["Neues Foto wählen","Bild entfernen (Farbe verwenden)"]);
           if(c===1){ s.img=null; save(); render(); return; }
           if(c!==0) return;
         }
@@ -688,12 +850,15 @@ function renderSettings(){
       if(act==="delSz"){
         const t=getT(); const s=findSize(t, el.dataset.sz);
         if(t.sizes.length<=1){ await askConfirm("Jeder Typ braucht mindestens eine Größe.","Verstanden"); return; }
-        let n=0; S.fields.forEach(f=>f.subs.forEach(sub=>{ n += sub.counts[t.id+"|"+s.id]||0; }));
+        let n=0;
+        S.fields.forEach(f=>f.subs.forEach(sub=>{
+          for(const k in sub.counts){ if(k.indexOf(t.id+"|"+s.id+"|")===0) n += sub.counts[k]; }
+        }));
         if(await askConfirm(`Größe „${s.label}“ löschen? ${n} vorhandene Zählungen dieser Größe werden mitgelöscht.`, "Löschen", true)){
           t.sizes = t.sizes.filter(x=>x.id!==s.id);
           S.fields.forEach(f=>f.subs.forEach(sub=>{
-            delete sub.counts[t.id+"|"+s.id];
-            sub.log = sub.log.filter(k=>k!==t.id+"|"+s.id);
+            for(const k in sub.counts){ if(k.indexOf(t.id+"|"+s.id+"|")===0) delete sub.counts[k]; }
+            sub.log = sub.log.filter(k=>k.indexOf(t.id+"|"+s.id+"|")!==0);
           }));
           save(); render();
         }
@@ -721,16 +886,16 @@ function renderSettings(){
     r.onload = async ()=>{
       try{
         const s = JSON.parse(r.result);
-        if(!s.types || !s.fields) throw 0;
+        if(!s.fields) throw 0;
         if(await askConfirm("Aktuelle Daten durch die Sicherung ersetzen?", "Wiederherstellen", true)){
-          S = s; ensureActiveSub(); save(); render();
+          S = normalize(s); ensureActiveSub(); save(); render();
         }
       }catch(_){ await askConfirm("Datei konnte nicht gelesen werden.","Verstanden"); }
     };
     r.readAsText(file);
   };
   document.getElementById("btnReset").onclick = async ()=>{
-    if(await askConfirm("Wirklich ALLE Zählungen in ALLEN Feldern auf 0 setzen? Felder, Typen und Fotos bleiben erhalten.", "Weiter", true)){
+    if(await askConfirm("Wirklich ALLE Zählungen in ALLEN Feldern auf 0 setzen? Felder, Typen, Layout und Fotos bleiben erhalten.", "Weiter", true)){
       if(await askConfirm("Letzte Sicherheitsfrage: Zählungen unwiderruflich löschen?", "Ja, alles löschen", true)){
         S.fields.forEach(f=>f.subs.forEach(s=>{ s.counts={}; s.log=[]; }));
         save(); render();
@@ -741,7 +906,7 @@ function renderSettings(){
 
 render();
 
-/* Offline-Fähigkeit: Service Worker registrieren (nur bei https-Hosting aktiv) */
+/* Offline-Fähigkeit */
 if("serviceWorker" in navigator && location.protocol==="https:"){
   navigator.serviceWorker.register("sw.js").catch(function(){});
 }
