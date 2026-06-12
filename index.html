@@ -162,7 +162,8 @@ function svgURI(svg){ return "data:image/svg+xml;utf8," + encodeURIComponent(svg
 const PAT = {
   rotweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#d22a2a" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>'),
   gelbweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#e8c61e"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>'),
-  gruenweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#1d4d22"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>')
+  gruenweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#1d4d22"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>'),
+  lilaweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#6b46c1" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>')
 };
 
 /* ================= Eigene Dialoge ================= */
@@ -245,27 +246,30 @@ function defaultState(){
   const s = {
     v:3,
     types:[
-      {id:"son", name:"Sonder",     color:"#0a2f8c", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
-      {id:"mue", name:"Müll",       color:"#7a1010", img:null, sizes:[ sz("0 – 1,5 m") ]},
+      {id:"son", name:"Sonder (NM 3, BF 2)",  color:"#0a2f8c", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
+      {id:"mue", name:"Müll (unverkäuflich)", color:"#7a1010", img:null, sizes:[
+        sz("2,5 – 3,5 m"), sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m")
+      ]},
       {id:"blf", name:"Blaufichte", color:"#103a52", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m") ]},
-      {id:"u",   name:"U",          color:"#6f7d78", img:null, sizes:[
+      {id:"u",   name:"Untergröße", color:"#6f7d78", img:null, sizes:[
         sz("NM 0,5 – 1 m",  {color:"#59872c"}),
         sz("NM 0 – 0,5 m",  {color:"#6f9a33"}),
         sz("Blau 0,5 – 1 m",{color:"#1d6e8e"}),
         sz("Blau 0 – 0,5 m",{color:"#2196c4"})
       ]},
       {id:"nm1", name:"NM 1",       color:"#59872c", img:null, sizes:[
-        sz("3,5 – 6 m",   {extra:true}),
-        sz("2,6 – 3,5 m", {extra:true}),
+        sz("4,5 – 8 m",   {extra:true}),
+        sz("3,5 – 4,5 m", {extra:true}),
+        sz("2,5 – 3,5 m", {extra:true}),
         sz("2 – 2,5 m",   {img:PAT.rotweiss}),
         sz("1,75 – 2 m",  {img:PAT.gelbweiss}),
-        sz("1,5 – 1,75 m",{color:"#f07800"}),
+        sz("1,5 – 1,75 m",{img:PAT.lilaweiss}),
         sz("1 – 1,5 m",   {img:PAT.gruenweiss})
       ]},
       {id:"nm2", name:"NM 2",       color:"#2e4d1e", img:null, sizes:[
         sz("2 – 2,5 m",   {img:PAT.rotweiss}),
         sz("1,75 – 2 m",  {img:PAT.gelbweiss}),
-        sz("1,5 – 1,75 m",{color:"#f07800"}),
+        sz("1,5 – 1,75 m",{img:PAT.lilaweiss}),
         sz("1 – 1,5 m",   {img:PAT.gruenweiss})
       ]}
     ],
@@ -278,6 +282,17 @@ function defaultState(){
       {h:"full", cells:["t:blf","t:u"]},
       {h:"full", cells:["t:nm1","t:nm2"]},
       {h:"half", cells:["f:vogel","f:laus"]}
+    ],
+    sizePresets:[
+      {id:uid(), label:"4,5 – 8 m",    color:null, img:null},
+      {id:uid(), label:"3,5 – 4,5 m",  color:null, img:null},
+      {id:uid(), label:"2,5 – 3,5 m",  color:null, img:null},
+      {id:uid(), label:"2 – 2,5 m",    color:null, img:PAT.rotweiss},
+      {id:uid(), label:"1,75 – 2 m",   color:null, img:PAT.gelbweiss},
+      {id:uid(), label:"1,5 – 1,75 m", color:null, img:PAT.lilaweiss},
+      {id:uid(), label:"1 – 1,5 m",    color:null, img:PAT.gruenweiss},
+      {id:uid(), label:"0,5 – 1 m",    color:null, img:null},
+      {id:uid(), label:"0 – 0,5 m",    color:null, img:null}
     ],
     fields:[ {id:uid(), name:"Feld 1", subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]} ],
     activeField:null, activeSub:null
@@ -336,8 +351,19 @@ function migrateOld(old){
   return s;
 }
 function normalize(s){
-  if(s && s.v===3 && s.types && s.flags && s.layout && s.fields) return s;
+  if(s && s.v===3 && s.types && s.flags && s.layout && s.fields){
+    if(!s.sizePresets) s.sizePresets = defaultState().sizePresets;
+    return s;
+  }
   return migrateOld(s);
+}
+async function moveInArray(arr, idx, title){
+  const c = await askChoice(title, ["⬆️ Ganz nach oben","↑ Eine Position hoch","↓ Eine Position runter","⬇️ Ganz nach unten"]);
+  if(c===null) return false;
+  const item = arr.splice(idx,1)[0];
+  let ni = c===0 ? 0 : c===1 ? Math.max(0, idx-1) : c===2 ? Math.min(arr.length, idx+1) : arr.length;
+  arr.splice(ni, 0, item);
+  return true;
 }
 
 function load(){
@@ -703,6 +729,22 @@ function renderSettings(){
   html += `<button class="btn wide" data-act="addF">＋ Neues Feld anlegen</button></div>
 
     <div class="card">
+      <h2 style="margin-top:0;">📏 Größen-Vorlagen</h2>
+      <p class="muted">Vorgefertigte Größen mit Farbe/Muster. Beim „＋ Größe“ in einem Typ kannst du daraus wählen – im Typ bleibt die Größe danach frei änderbar.</p>`;
+  S.sizePresets.forEach((p,pi)=>{
+    html += `<div class="row">
+      ${p.img? `<span class="thumb" style="background-image:url('${p.img}')"></span>` : `<input type="color" value="${p.color||"#59872c"}" data-act="colP" data-p="${p.id}">`}
+      <span class="grow" style="font-size:14px;">${esc(p.label)}${(!p.img&&!p.color)?'<span class="badge">Typ-Farbe</span>':""}</span>
+      <button class="btn small" style="padding:8px 7px;min-width:34px;" data-act="imgP" data-p="${p.id}">📷</button>
+      <button class="btn small" style="padding:8px 7px;min-width:34px;" data-act="movP" data-p="${p.id}" data-i="${pi}">↕</button>
+      <button class="btn small" style="padding:8px 7px;min-width:34px;" data-act="renP" data-p="${p.id}">✏️</button>
+      <button class="btn small danger" style="padding:8px 7px;min-width:34px;" data-act="delP" data-p="${p.id}">🗑</button>
+    </div>`;
+  });
+  html += `<button class="btn small" data-act="addP">＋ Vorlage</button>
+    </div>
+
+    <div class="card">
       <h2 style="margin-top:0;">🎨 Typen & Größen gestalten</h2>
       <p class="muted">Pro Typ und pro Größe: Farbe wählen oder Foto hinterlegen (📷). Größen mit „Mehr“-Kennzeichen erscheinen erst nach Tippen auf die Mehr…-Taste (⤵︎/⤴︎ schaltet um).</p>`;
   S.types.forEach(t=>{
@@ -713,14 +755,15 @@ function renderSettings(){
         <button class="btn small" data-act="imgT" data-t="${t.id}">📷</button>
         <button class="btn small" data-act="renT" data-t="${t.id}">✏️</button>
       </div>`;
-    t.sizes.forEach(s=>{
+    t.sizes.forEach((s,si)=>{
       html += `<div class="row" style="padding-left:8px;">
         ${s.img? `<span class="thumb" style="background-image:url('${s.img}')"></span>` : `<input type="color" value="${s.color||t.color}" data-act="colSz" data-t="${t.id}" data-sz="${s.id}">`}
         <span class="grow" style="font-size:14px;">${esc(s.label)}${s.extra?'<span class="badge">Mehr</span>':""}</span>
-        <button class="btn small" data-act="imgSz" data-t="${t.id}" data-sz="${s.id}">📷</button>
-        <button class="btn small" data-act="extraSz" data-t="${t.id}" data-sz="${s.id}">${s.extra?"⤴︎":"⤵︎"}</button>
-        <button class="btn small" data-act="renSz" data-t="${t.id}" data-sz="${s.id}">✏️</button>
-        <button class="btn small danger" data-act="delSz" data-t="${t.id}" data-sz="${s.id}">🗑</button>
+        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="imgSz" data-t="${t.id}" data-sz="${s.id}">📷</button>
+        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="movSz" data-t="${t.id}" data-sz="${s.id}" data-i="${si}">↕</button>
+        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="extraSz" data-t="${t.id}" data-sz="${s.id}">${s.extra?"⤴︎":"⤵︎"}</button>
+        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="renSz" data-t="${t.id}" data-sz="${s.id}">✏️</button>
+        <button class="btn small danger" style="padding:8px 6px;min-width:32px;" data-act="delSz" data-t="${t.id}" data-sz="${s.id}">🗑</button>
       </div>`;
     });
     html += `<button class="btn small" data-act="addSz" data-t="${t.id}">＋ Größe</button>
@@ -770,6 +813,7 @@ function renderSettings(){
     if(act==="colT"){ el.onchange = ()=>{ getT().color = el.value; save(); render(); }; return; }
     if(act==="colSz"){ el.onchange = ()=>{ const s=findSize(getT(), el.dataset.sz); s.color = el.value; save(); render(); }; return; }
     if(act==="colFl"){ el.onchange = ()=>{ getFl().color = el.value; save(); render(); }; return; }
+    if(act==="colP"){ el.onchange = ()=>{ const p=S.sizePresets.find(x=>x.id===el.dataset.p); p.color = el.value; save(); render(); }; return; }
 
     el.onclick = async ()=>{
       if(act==="renFl"){
@@ -865,8 +909,52 @@ function renderSettings(){
       }
       if(act==="addSz"){
         const t=getT();
-        const n = await askText("Neue Größe (z. B. 2 – 2,5 m):", "");
-        if(n){ t.sizes.push({id:uid(), label:n, color:null, img:null, extra:false}); save(); render(); }
+        const opts = S.sizePresets.map(p=>p.label).concat(["✏️ Eigene Größe eingeben…"]);
+        const c = await askChoice("Größe für „"+t.name+"“ hinzufügen", opts);
+        if(c===null) return;
+        if(c < S.sizePresets.length){
+          const p = S.sizePresets[c];
+          t.sizes.push({id:uid(), label:p.label, color:p.color||null, img:p.img||null, extra:false});
+          save(); render();
+        } else {
+          const n = await askText("Neue Größe (z. B. 2 – 2,5 m):", "");
+          if(n){ t.sizes.push({id:uid(), label:n, color:null, img:null, extra:false}); save(); render(); }
+        }
+      }
+      if(act==="movSz"){
+        const t=getT(); const s=findSize(t, el.dataset.sz);
+        if(await moveInArray(t.sizes, t.sizes.indexOf(s), "„"+s.label+"“ verschieben")){ save(); render(); }
+      }
+      /* --- Größen-Vorlagen --- */
+      if(act==="addP"){
+        const n = await askText("Neue Vorlage (z. B. 2 – 2,5 m):", "");
+        if(n){ S.sizePresets.push({id:uid(), label:n, color:null, img:null}); save(); render(); }
+      }
+      if(act==="renP"){
+        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
+        const n = await askText("Vorlage umbenennen:", p.label);
+        if(n){ p.label=n; save(); render(); }
+      }
+      if(act==="imgP"){
+        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
+        if(p.img){
+          const c = await askChoice("Bild für Vorlage „"+p.label+"“", ["Neues Foto wählen","Bild entfernen (Farbe verwenden)"]);
+          if(c===1){ p.img=null; save(); render(); return; }
+          if(c!==0) return;
+        }
+        const d = await pickImage();
+        if(d){ p.img=d; save(); render(); }
+      }
+      if(act==="movP"){
+        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
+        if(await moveInArray(S.sizePresets, S.sizePresets.indexOf(p), "Vorlage „"+p.label+"“ verschieben")){ save(); render(); }
+      }
+      if(act==="delP"){
+        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
+        if(await askConfirm(`Vorlage „${p.label}“ löschen? Bereits in Typen verwendete Größen bleiben unverändert erhalten.`, "Löschen", true)){
+          S.sizePresets = S.sizePresets.filter(x=>x.id!==p.id);
+          save(); render();
+        }
       }
     };
   });
