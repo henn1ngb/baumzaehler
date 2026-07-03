@@ -66,7 +66,7 @@
   .tile.flagtile{box-shadow:inset 0 0 0 2px rgba(255,255,255,.18), 0 3px 0 rgba(0,0,0,.35);}
   .tile.flagtile .tname{font-size:clamp(16px,4.8vw,22px);}
   .tile.armed{outline:4px solid var(--accent); outline-offset:-4px;}
-  .tile.disabledtile{opacity:.3; pointer-events:none;}
+  .tile.menutile{background:var(--panel); border:2px dashed var(--line); color:var(--text); box-shadow:none;}
   .tile.emptycell{background:transparent; box-shadow:none; pointer-events:none;}
   .flash{animation:flash .25s ease;}
   @keyframes flash{0%{filter:brightness(1.7);}100%{filter:brightness(1);}}
@@ -76,8 +76,6 @@
     margin:10px 12px 0; padding:14px; border-radius:var(--radius);
     font-size:19px; font-weight:800; color:#fff; text-align:center; text-shadow:0 1px 4px rgba(0,0,0,.55);
   }
-  .sizes{flex:1; min-height:0; display:grid; gap:10px; padding:10px 12px;}
-  .sizes .tile .tname{font-size:clamp(22px,7vw,34px);}
   .backbtn{
     margin:0 12px 12px; padding:16px; border-radius:var(--radius);
     background:var(--panel); color:var(--text); border:1px solid var(--line);
@@ -101,6 +99,7 @@
   .btn.primary{background:var(--accent); color:#1a2421; border-color:var(--accent);}
   .btn.danger{color:var(--danger);}
   .btn.small{padding:8px 10px; font-size:14px; min-width:38px;}
+  .btn.tiny{padding:8px 6px; font-size:14px; min-width:32px;}
   .btn.wide{width:100%; margin-top:6px;}
   .muted{color:var(--muted); font-size:13px; line-height:1.4;}
   .corr{display:inline-flex; gap:6px;}
@@ -126,7 +125,7 @@
   }
   .modal{
     background:var(--panel); border:1px solid var(--line); border-radius:14px;
-    padding:16px; width:100%; max-width:380px;
+    padding:16px; width:100%; max-width:380px; max-height:80vh; overflow-y:auto;
   }
   .modal h3{margin:0 0 12px; font-size:17px;}
   .modal p{margin:0 0 14px; font-size:15px; line-height:1.45; color:var(--text); user-select:text;}
@@ -152,17 +151,17 @@
 /* ================= Hilfen ================= */
 function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-3); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function normTxt(x){ return String(x).toLowerCase().replace(/[\s–—\-_.]/g,""); }
 function tileStyle(color, img){
   return img
-    ? "background-image:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.38)),url('"+img+"');background-size:cover;background-position:center;background-color:"+color+";"
-    : "background:"+color+";";
+    ? "background-image:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.38)),url('"+img+"');background-size:cover;background-position:center;background-color:"+(color||"#3a524a")+";"
+    : "background:"+(color||"#3a524a")+";";
 }
-/* Streifenmuster als eingebaute Grafiken */
 function svgURI(svg){ return "data:image/svg+xml;utf8," + encodeURIComponent(svg); }
 const PAT = {
-  rotweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#d22a2a" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>'),
+  rotweiss:  svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#d22a2a" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>'),
   gelbweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#e8c61e"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>'),
-  gruenweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#1d4d22"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>'),
+  gruenweiss:svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g fill="#1d4d22"><rect x="2" width="9" height="48"/><rect x="20" width="9" height="48"/><rect x="38" width="9" height="48"/></g></svg>'),
   lilaweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#6b46c1" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>')
 };
 
@@ -198,6 +197,14 @@ function askChoice(title, options){
     ov.querySelector("#mC").onclick = ()=>{ ov.remove(); res(null); };
   });
 }
+async function moveInArray(arr, idx, title){
+  const c = await askChoice(title, ["⬆️ Ganz nach oben","↑ Eine Position hoch","↓ Eine Position runter","⬇️ Ganz nach unten"]);
+  if(c===null) return false;
+  const item = arr.splice(idx,1)[0];
+  let ni = c===0 ? 0 : c===1 ? Math.max(0, idx-1) : c===2 ? Math.min(arr.length, idx+1) : arr.length;
+  arr.splice(ni, 0, item);
+  return true;
+}
 function pickImage(){
   return new Promise(res=>{
     const inp = document.createElement("input");
@@ -229,151 +236,144 @@ function pickImage(){
   });
 }
 
-/* ================= Standarddaten (Henning-Konfiguration) ================= */
-const KEY = "baumzaehler_v3";
-const OLDKEYS = ["baumzaehler_v2","baumzaehler_v1"];
+/* ================= Standarddaten =================
+   Ablauf: erst GRÖSSE wählen (Seite 1), dann TYP (Seite 2).
+   Größen und Typen sind zentral definiert; Zähl-Schlüssel: typId|größenId|merkmalId */
+const KEY = "baumzaehler_v4";
+const OLDKEYS = ["baumzaehler_v3","baumzaehler_v2","baumzaehler_v1"];
 let storageOK = true;
 try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); }
 catch(e){ storageOK = false; document.getElementById("storageWarn").classList.remove("hidden"); }
 let memFallback = null;
 
-function sz(label, opts){
-  opts = opts||{};
-  return {id:uid(), label:label, color:opts.color||null, img:opts.img||null, extra:!!opts.extra};
-}
-
 function defaultState(){
-  const s = {
-    v:3,
+  const gs = (label,color,img,extra)=>({id:uid(), label:label, color:color||null, img:img||null, extra:!!extra});
+  const s45=gs("4,5 – 8 m","#59872c",null,true), s35=gs("3,5 – 4,5 m","#59872c",null,true),
+        s25=gs("2,5 – 3,5 m","#59872c"), s2=gs("2 – 2,5 m",null,PAT.rotweiss),
+        s175=gs("1,75 – 2 m",null,PAT.gelbweiss), s15=gs("1,5 – 1,75 m",null,PAT.lilaweiss),
+        s1=gs("1 – 1,5 m",null,PAT.gruenweiss), s05=gs("0,5 – 1 m","#6f7d78"), s0=gs("0 – 0,5 m","#8a958f");
+  return {
+    v:4,
+    sizes:[s45,s35,s25,s2,s175,s15,s1,s05,s0],
     types:[
-      {id:"son", name:"Sonder (NM 3, BF 2)",  color:"#0a2f8c", img:null, sizes:[ sz("1,75 – 2,5 m"), sz("1 – 1,75 m") ]},
-      {id:"mue", name:"Müll (unverkäuflich)", color:"#7a1010", img:null, sizes:[
-        sz("2,5 – 3,5 m"), sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m"), sz("1 – 1,5 m")
-      ]},
-      {id:"blf", name:"Blaufichte", color:"#103a52", img:null, sizes:[ sz("2 – 2,5 m"), sz("1,75 – 2 m"), sz("1,5 – 1,75 m") ]},
-      {id:"u",   name:"Untergröße", color:"#6f7d78", img:null, sizes:[
-        sz("NM 0,5 – 1 m",  {color:"#59872c"}),
-        sz("NM 0 – 0,5 m",  {color:"#6f9a33"}),
-        sz("Blau 0,5 – 1 m",{color:"#1d6e8e"}),
-        sz("Blau 0 – 0,5 m",{color:"#2196c4"})
-      ]},
-      {id:"nm1", name:"NM 1",       color:"#59872c", img:null, sizes:[
-        sz("4,5 – 8 m",   {extra:true}),
-        sz("3,5 – 4,5 m", {extra:true}),
-        sz("2,5 – 3,5 m", {extra:true}),
-        sz("2 – 2,5 m",   {img:PAT.rotweiss}),
-        sz("1,75 – 2 m",  {img:PAT.gelbweiss}),
-        sz("1,5 – 1,75 m",{img:PAT.lilaweiss}),
-        sz("1 – 1,5 m",   {img:PAT.gruenweiss})
-      ]},
-      {id:"nm2", name:"NM 2",       color:"#2e4d1e", img:null, sizes:[
-        sz("2 – 2,5 m",   {img:PAT.rotweiss}),
-        sz("1,75 – 2 m",  {img:PAT.gelbweiss}),
-        sz("1,5 – 1,75 m",{img:PAT.lilaweiss}),
-        sz("1 – 1,5 m",   {img:PAT.gruenweiss})
-      ]}
+      {id:"son", name:"Sonder (NM 3, BF 2)", color:"#0a2f8c", img:null},
+      {id:"mue", name:"Vogel",               color:"#b02a64", img:null},
+      {id:"blf", name:"Blaufichte",          color:"#103a52", img:null},
+      {id:"u",   name:"Untergröße",          color:"#6f7d78", img:null},
+      {id:"nm1", name:"NM 1",                color:"#59872c", img:null},
+      {id:"nm2", name:"NM 2",                color:"#2e4d1e", img:null}
     ],
     flags:[
       {id:"vogel", name:"Vögel", color:"#b02a64"},
-      {id:"laus",  name:"Läuse", color:"#aa6c1f"}
+      {id:"laus",  name:"Läuse", color:"#aa6c1f"},
+      {id:"m3",    name:"Merkmal 3", color:"#555f5b"}
     ],
-    layout:[
+    layoutSizes:[
+      {h:"half", cells:["menu",      "s:"+s25.id]},
+      {h:"full", cells:["s:"+s2.id,  "s:"+s175.id]},
+      {h:"full", cells:["s:"+s15.id, "s:"+s1.id]},
+      {h:"half", cells:["s:"+s05.id, "s:"+s0.id]}
+    ],
+    layoutTypes:[
       {h:"half", cells:["t:son","t:mue"]},
       {h:"full", cells:["t:blf","t:u"]},
       {h:"full", cells:["t:nm1","t:nm2"]},
       {h:"half", cells:["f:vogel","f:laus"]}
     ],
-    sizePresets:[
-      {id:uid(), label:"4,5 – 8 m",    color:null, img:null},
-      {id:uid(), label:"3,5 – 4,5 m",  color:null, img:null},
-      {id:uid(), label:"2,5 – 3,5 m",  color:null, img:null},
-      {id:uid(), label:"2 – 2,5 m",    color:null, img:PAT.rotweiss},
-      {id:uid(), label:"1,75 – 2 m",   color:null, img:PAT.gelbweiss},
-      {id:uid(), label:"1,5 – 1,75 m", color:null, img:PAT.lilaweiss},
-      {id:uid(), label:"1 – 1,5 m",    color:null, img:PAT.gruenweiss},
-      {id:uid(), label:"0,5 – 1 m",    color:null, img:null},
-      {id:uid(), label:"0 – 0,5 m",    color:null, img:null}
-    ],
     fields:[ {id:uid(), name:"Feld 1", subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]} ],
     activeField:null, activeSub:null
   };
-  return s;
 }
 
-/* ---- Migration: Felder/Zählungen aus alten Versionen übernehmen ---- */
-function normTxt(x){ return String(x).toLowerCase().replace(/[\s–—\-_.]/g,""); }
-function migrateOld(old){
+/* ---- Migration v3 (Typ-zuerst mit Größen je Typ) -> v4 (zentrale Größen) ---- */
+function migrateV3(o){
   const s = defaultState();
-  if(!old || !old.fields) return s;
-  // Zuordnung alter Typ/Größe -> neuer Schlüssel über Namen/Labels
-  const map = {};
-  (old.types||[]).forEach(ot=>{
-    const otn = normTxt(ot.name||ot.id||"");
-    // Kandidaten-Typen: Namensähnlichkeit zuerst
-    const cands = s.types.slice().sort((a,b)=>{
-      const am = (otn.includes(normTxt(a.name))||normTxt(a.name).includes(otn)) ? 0 : 1;
-      const bm = (otn.includes(normTxt(b.name))||normTxt(b.name).includes(otn)) ? 0 : 1;
-      return am-bm;
-    });
-    const sizes = ot.sizes||[];
-    sizes.forEach((os,i)=>{
-      const lbl = (typeof os==="string") ? os : (os.label||"");
-      const oln = normTxt(lbl);
-      let hit = null;
-      for(const nt of cands){
-        hit = nt.sizes.find(x=>{
-          const nn = normTxt(x.label);
-          return nn===oln || oln.endsWith(nn) || nn.endsWith(oln);
-        });
-        if(hit){ map[ot.id+"|"+((typeof os==="string")?i:os.id)] = nt.id+"|"+hit.id; break; }
+  if(o.flags && o.flags.length) s.flags = o.flags;
+  // zentrale Größen aus allen Typ-Größen zusammenführen (nach Bezeichnung)
+  const sizes = []; const mapKey = {}; // "altTyp|altGrößenId" -> neue GrößenId
+  (o.types||[]).forEach(ot=>{
+    (ot.sizes||[]).forEach(os=>{
+      let g = sizes.find(x=>normTxt(x.label)===normTxt(os.label));
+      if(!g){
+        g = {id:uid(), label:os.label, color:os.color||null, img:os.img||null, extra:false};
+        sizes.push(g);
       }
+      mapKey[ot.id+"|"+os.id] = g.id;
     });
   });
-  s.fields = old.fields.map(f=>({
-    id:f.id, name:f.name,
-    subs:(f.subs||[]).map(sub=>{
-      const counts = {}, log = [];
-      for(const k in (sub.counts||{})){
-        // alter Schlüssel evtl. schon mit Flag-Teil
-        const base = k.split("|").slice(0,2).join("|");
-        const nk = map[base];
-        if(nk) counts[nk+"|"] = (counts[nk+"|"]||0) + sub.counts[k];
-      }
-      (sub.log||[]).forEach(k=>{
-        const base = k.split("|").slice(0,2).join("|");
-        if(map[base]) log.push(map[base]+"|");
-      });
-      return {id:sub.id, name:sub.name, counts:counts, log:log};
-    })
-  }));
-  if(!s.fields.length) s.fields = defaultState().fields;
-  s.activeField = old.activeField; s.activeSub = old.activeSub;
+  if(sizes.length) s.sizes = sizes;
+  // Typen ohne Größen übernehmen
+  if(o.types && o.types.length){
+    s.types = o.types.map(t=>({
+      id:t.id,
+      name: normTxt(t.name)===normTxt("Müll (unverkäuflich)") ? "Vogel" : t.name,
+      color:t.color, img:t.img||null
+    }));
+  }
+  // Typen-Anordnung aus der alten Zählseiten-Anordnung
+  if(o.layout && o.layout.length) s.layoutTypes = o.layout;
+  // Größen-Anordnung: Standardgerüst, per Bezeichnung zugeordnet
+  const find = lbl=>{
+    const n = normTxt(lbl);
+    const g = s.sizes.find(x=>{ const a=normTxt(x.label); return a===n || a.endsWith(n) || n.endsWith(a); });
+    return g ? "s:"+g.id : null;
+  };
+  s.layoutSizes = [
+    {h:"half", cells:["menu", find("2,5 – 3,5 m")]},
+    {h:"full", cells:[find("2 – 2,5 m"),  find("1,75 – 2 m")]},
+    {h:"full", cells:[find("1,5 – 1,75 m"), find("1 – 1,5 m")]},
+    {h:"half", cells:[find("0,5 – 1 m"), find("0 – 0,5 m")]}
+  ];
+  // nicht platzierte Größen ins Mehr-Menü
+  const placed = new Set();
+  s.layoutSizes.forEach(r=>r.cells.forEach(c=>{ if(c && c.indexOf("s:")===0) placed.add(c.slice(2)); }));
+  s.sizes.forEach(g=>{ if(!placed.has(g.id)) g.extra = true; });
+  // Felder + Zählungen umschlüsseln
+  if(o.fields && o.fields.length){
+    s.fields = o.fields.map(f=>({
+      id:f.id, name:f.name,
+      subs:(f.subs||[]).map(sub=>{
+        const counts = {}, log = [];
+        for(const k in (sub.counts||{})){
+          const p = k.split("|");
+          const g = mapKey[p[0]+"|"+p[1]];
+          if(!g) continue;
+          const nk = p[0]+"|"+g+"|"+(p[2]||"");
+          counts[nk] = (counts[nk]||0) + sub.counts[k];
+        }
+        (sub.log||[]).forEach(k=>{
+          const p = k.split("|");
+          const g = mapKey[p[0]+"|"+p[1]];
+          if(g) log.push(p[0]+"|"+g+"|"+(p[2]||""));
+        });
+        return {id:sub.id, name:sub.name, counts:counts, log:log};
+      })
+    }));
+  }
+  s.activeField = o.activeField; s.activeSub = o.activeSub;
+  return s;
+}
+function migrateAncient(o){
+  const s = defaultState();
+  if(o.fields && o.fields.length){
+    s.fields = o.fields.map(f=>({id:f.id, name:f.name, subs:(f.subs||[]).map(sub=>({id:sub.id, name:sub.name, counts:{}, log:[]}))}));
+  }
   return s;
 }
 function normalize(s){
-  if(s && s.v===3 && s.types && s.flags && s.layout && s.fields){
-    if(!s.sizePresets) s.sizePresets = defaultState().sizePresets;
-    return s;
-  }
-  return migrateOld(s);
+  if(s && s.v===4 && s.sizes && s.types && s.flags && s.layoutSizes && s.layoutTypes && s.fields) return s;
+  if(s && s.types && s.types.length && s.types[0] && s.types[0].sizes) return migrateV3(s);
+  if(s && s.fields) return migrateAncient(s);
+  return defaultState();
 }
-async function moveInArray(arr, idx, title){
-  const c = await askChoice(title, ["⬆️ Ganz nach oben","↑ Eine Position hoch","↓ Eine Position runter","⬇️ Ganz nach unten"]);
-  if(c===null) return false;
-  const item = arr.splice(idx,1)[0];
-  let ni = c===0 ? 0 : c===1 ? Math.max(0, idx-1) : c===2 ? Math.min(arr.length, idx+1) : arr.length;
-  arr.splice(ni, 0, item);
-  return true;
-}
-
 function load(){
   if(!storageOK){ if(!memFallback) memFallback = defaultState(); return memFallback; }
   try{
     const raw = localStorage.getItem(KEY);
-    if(raw){ const s = JSON.parse(raw); if(s && s.fields) return normalize(s); }
+    if(raw){ const s = JSON.parse(raw); if(s) return normalize(s); }
     for(const ok of OLDKEYS){
       const old = localStorage.getItem(ok);
-      if(old){ const o = JSON.parse(old); if(o && o.fields) return migrateOld(o); }
+      if(old){ const o = JSON.parse(old); if(o) return normalize(o); }
     }
   }catch(e){}
   return defaultState();
@@ -397,12 +397,13 @@ function save(){
 }
 function curField(){ return S.fields.find(f=>f.id===S.activeField); }
 function curSub(){ return curField().subs.find(s=>s.id===S.activeSub); }
-function findSize(t, sid){ return t.sizes.find(x=>x.id===sid); }
+function findSizeG(sid){ return S.sizes.find(x=>x.id===sid); }
+function findType(tid){ return S.types.find(x=>x.id===tid); }
 function findFlag(fid){ return S.flags.find(x=>x.id===fid); }
 
-/* ================= Zähl-Logik =================
-   Zähl-Schlüssel: typId|größenId|merkmalId  (merkmalId leer = normale Zählung) */
-let armedFlag = null; // Merkmal für die nächste Zählung
+/* ================= Zähl-Logik ================= */
+let armedFlag = null;   // Merkmal für die nächste Zählung
+let selSize  = null;    // gewählte Größe (Seite 1 -> Seite 2)
 
 function addCount(typeId, sizeId){
   const sub = curSub();
@@ -428,8 +429,12 @@ function adjust(sub, k, delta){
   save(); render();
 }
 function subTotal(sub){ return Object.values(sub.counts).reduce((a,b)=>a+b,0); }
-function typeTotalInSub(sub, typeId){
-  let n=0; for(const k in sub.counts){ if(k.indexOf(typeId+"|")===0) n += sub.counts[k]; }
+function sizeTotalInSub(sub, sizeId){
+  let n=0; for(const k in sub.counts){ if(k.split("|")[1]===sizeId) n += sub.counts[k]; }
+  return n;
+}
+function typeSizeTotalInSub(sub, typeId, sizeId){
+  let n=0; for(const k in sub.counts){ const p=k.split("|"); if(p[0]===typeId && p[1]===sizeId) n += sub.counts[k]; }
   return n;
 }
 function flagTotalInSub(sub, flagId){
@@ -439,69 +444,72 @@ function flagTotalInSub(sub, flagId){
 
 /* ================= Ansichten ================= */
 const app = document.getElementById("app");
-let view = "count";
-let sizeType = null;
-let showExtra = false;
+let view = "count";     // count (Größen) | sizemenu | type | report | settings
 let reportFieldId = null;
 
 function setView(v){ view=v; render(); }
-document.getElementById("tabCount").onclick    = ()=>{ sizeType=null; showExtra=false; setView("count"); };
+document.getElementById("tabCount").onclick    = ()=>{ selSize=null; setView("count"); };
 document.getElementById("tabReport").onclick   = ()=>{ reportFieldId = S.activeField; setView("report"); };
 document.getElementById("tabSettings").onclick = ()=>setView("settings");
 
 function render(){
   ["tabCount","tabReport","tabSettings"].forEach(id=>document.getElementById(id).classList.remove("active"));
-  if(view==="count"||view==="size") document.getElementById("tabCount").classList.add("active");
+  if(view==="count"||view==="sizemenu"||view==="type") document.getElementById("tabCount").classList.add("active");
   if(view==="report") document.getElementById("tabReport").classList.add("active");
   if(view==="settings") document.getElementById("tabSettings").classList.add("active");
   if(view==="count") renderCount();
-  else if(view==="size") renderSize();
+  else if(view==="sizemenu") renderSizeMenu();
+  else if(view==="type") renderTypePage();
   else if(view==="report") renderReport();
   else renderSettings();
 }
 
-/* ---------- Zählseite ---------- */
 function keyText(k){
   const p = k.split("|");
-  const t = S.types.find(t=>t.id===p[0]);
-  if(!t) return "?";
-  const s = findSize(t, p[1]);
-  const fl = p[2] ? findFlag(p[2]) : null;
-  return esc(t.name) + (t.sizes.length>1 && s ? " · " + esc(s.label) : "") + (fl ? " · " + esc(fl.name) : "");
+  const t = findType(p[0]), s = findSizeG(p[1]), fl = p[2] ? findFlag(p[2]) : null;
+  return (s?esc(s.label):"?") + " · " + (t?esc(t.name):"?") + (fl ? " · " + esc(fl.name) : "");
 }
 function lastEntryText(sub){
   const k = sub.log[sub.log.length-1];
   if(!k) return "Noch kein Eintrag in diesem Bereich";
   return "Zuletzt: <b>" + keyText(k) + "</b>";
 }
-function cellHTML(ref, sub){
+function flagCellHTML(fid, sub){
+  const fl = findFlag(fid);
+  if(!fl) return '<div class="tile emptycell"></div>';
+  const armed = armedFlag===fl.id;
+  const dis = armedFlag && armedFlag!==fl.id;
+  return `<button class="tile flagtile ${armed?"armed":""}" ${dis?'style="opacity:.3;pointer-events:none;background:'+fl.color+'"':'style="background:'+fl.color+'"'} data-flag="${fl.id}">
+    <span class="tcount">${flagTotalInSub(sub, fl.id)}</span>
+    <span class="tname">${esc(fl.name)}</span>
+    <span class="tsub">${armed ? "✓ aktiv" : "Merkmal für nächste Zählung"}</span>
+  </button>`;
+}
+
+/* ---------- Seite 1: Größen ---------- */
+function sizeCellHTML(ref, sub){
   if(!ref) return '<div class="tile emptycell"></div>';
-  const kind = ref.slice(0,2), id = ref.slice(2);
-  if(kind==="t:"){
-    const t = S.types.find(x=>x.id===id);
-    if(!t) return '<div class="tile emptycell"></div>';
-    return `<button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
-      <span class="tcount">${typeTotalInSub(sub,t.id)}</span>
-      <span class="tname">${esc(t.name)}</span>
-      <span class="tsub">${t.sizes.length>1 ? "Größe wählen →" : esc(t.sizes[0]?t.sizes[0].label:"")}</span>
+  if(ref==="menu"){
+    const extras = S.sizes.filter(x=>x.extra);
+    return `<button class="tile menutile" data-menu="1">
+      <span class="tname" style="font-size:clamp(16px,4.8vw,22px);">📂 Mehr…</span>
+      <span class="tsub">${extras.length} weitere Größen</span>
     </button>`;
   }
-  if(kind==="f:"){
-    const fl = findFlag(id);
-    if(!fl) return '<div class="tile emptycell"></div>';
-    const armed = armedFlag===fl.id;
-    const dis = armedFlag && armedFlag!==fl.id;
-    return `<button class="tile flagtile ${armed?"armed":""} ${dis?"disabledtile":""}" data-flag="${fl.id}" style="background:${fl.color}">
-      <span class="tcount">${flagTotalInSub(sub, fl.id)}</span>
-      <span class="tname">${esc(fl.name)}</span>
-      <span class="tsub">${armed ? "✓ aktiv – jetzt Typ wählen" : "Merkmal für nächste Zählung"}</span>
+  if(ref.indexOf("s:")===0){
+    const g = findSizeG(ref.slice(2));
+    if(!g) return '<div class="tile emptycell"></div>';
+    return `<button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
+      <span class="tcount">${sizeTotalInSub(sub, g.id)}</span>
+      <span class="tname">${esc(g.label)}</span>
     </button>`;
   }
+  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
   return '<div class="tile emptycell"></div>';
 }
 function renderCount(){
   const f = curField(), sub = curSub();
-  const rowsCSS = S.layout.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
+  const rowsCSS = S.layoutSizes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
   app.innerHTML = `
     <header>
       <div class="ctx">
@@ -514,78 +522,112 @@ function renderCount(){
       <button id="btnUndo" ${sub.log.length? "":"disabled"}>↩︎ Rückgängig</button>
     </div>
     <div class="grid" style="grid-template-rows:${rowsCSS}">
-      ${S.layout.map(r=>cellHTML(r.cells[0],sub)+cellHTML(r.cells[1],sub)).join("")}
+      ${S.layoutSizes.map(r=>sizeCellHTML(r.cells[0],sub)+sizeCellHTML(r.cells[1],sub)).join("")}
     </div>`;
   document.getElementById("selField").onchange = e=>{ S.activeField=e.target.value; ensureActiveSub(); armedFlag=null; save(); render(); };
   document.getElementById("selSub").onchange   = e=>{ S.activeSub=e.target.value; armedFlag=null; save(); render(); };
   document.getElementById("btnUndo").onclick   = undo;
-  app.querySelectorAll(".tile[data-type]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const t = S.types.find(t=>t.id===btn.dataset.type);
-      if(!t || !t.sizes.length) return;
-      if(t.sizes.length===1){
-        addCount(t.id, t.sizes[0].id);
-        render(); // Flag-Status & Zähler aktualisieren
-      } else { sizeType=t.id; showExtra=false; setView("size"); }
-    };
+  wireCountButtons();
+}
+function wireCountButtons(){
+  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
+    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("type"); };
+  });
+  app.querySelectorAll(".tile[data-menu]").forEach(btn=>{
+    btn.onclick = ()=>setView("sizemenu");
   });
   app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
     btn.onclick = ()=>{
       const id = btn.dataset.flag;
-      armedFlag = (armedFlag===id) ? null : id;  // erneut tippen = abschalten
+      armedFlag = (armedFlag===id) ? null : id;
       render();
     };
   });
 }
 
-/* ---------- Größenseite ---------- */
-function renderSize(){
-  const t = S.types.find(t=>t.id===sizeType);
-  if(!t){ setView("count"); return; }
-  const fl = armedFlag ? findFlag(armedFlag) : null;
-  const main  = t.sizes.filter(s=>!s.extra);
-  const extra = t.sizes.filter(s=>s.extra);
-  const shown = showExtra ? extra : main;
-  const moreBtn = (!showExtra && extra.length>0);
-  const rows = shown.length + (moreBtn?1:0);
-
+/* ---------- Mehr-Menü (weitere Größen) ---------- */
+function renderSizeMenu(){
+  const sub = curSub();
+  const extras = S.sizes.filter(x=>x.extra);
   app.innerHTML = `
-    <div class="sizehead" style="${tileStyle(t.color, t.img)}">${esc(t.name)} – Größe wählen${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}${showExtra?" (große Bäume)":""}</div>
-    <div class="sizes" style="grid-template-rows:repeat(${Math.max(rows,1)},1fr)">
-      ${moreBtn?`<button class="tile moretile" id="btnMore" style="background:var(--panel);border:2px dashed var(--line);box-shadow:none;"><span class="tname" style="font-size:22px;">Mehr… (${extra.map(x=>esc(x.label)).join(" · ")})</span></button>`:""}
-      ${shown.map(s=>`
-        <button class="tile" data-sid="${s.id}" style="${tileStyle(s.color||t.color, s.img||null)}">
-          <span class="tname">${esc(s.label)}</span>
+    <div class="sizehead" style="background:var(--panel2);">📂 Weitere Größen</div>
+    <div class="grid" style="grid-template-rows:repeat(${Math.max(1,Math.ceil(extras.length/2))},1fr)">
+      ${extras.map(g=>`
+        <button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
+          <span class="tcount">${sizeTotalInSub(sub, g.id)}</span>
+          <span class="tname">${esc(g.label)}</span>
         </button>`).join("")}
+      ${extras.length%2 ? '<div class="tile emptycell"></div>' : ""}
     </div>
-    <button class="backbtn" id="btnBack">${showExtra?"← Zurück zu den Standardgrößen":"✕ Abbrechen (zurück ohne Speichern)"}</button>`;
-
-  app.querySelectorAll(".tile[data-sid]").forEach(btn=>{
-    btn.onclick = ()=>{ addCount(t.id, btn.dataset.sid); sizeType=null; showExtra=false; setView("count"); };
+    <button class="backbtn" id="btnBack">← Zurück</button>`;
+  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
+    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("type"); };
   });
-  const more = document.getElementById("btnMore");
-  if(more) more.onclick = ()=>{ showExtra=true; render(); };
-  document.getElementById("btnBack").onclick = ()=>{
-    if(showExtra){ showExtra=false; render(); }
-    else { sizeType=null; setView("count"); }
-  };
+  document.getElementById("btnBack").onclick = ()=>setView("count");
+}
+
+/* ---------- Seite 2: Typen ---------- */
+function typeCellHTML(ref, sub){
+  if(!ref) return '<div class="tile emptycell"></div>';
+  if(ref.indexOf("t:")===0){
+    const t = findType(ref.slice(2));
+    if(!t) return '<div class="tile emptycell"></div>';
+    return `<button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
+      <span class="tcount">${typeSizeTotalInSub(sub, t.id, selSize)}</span>
+      <span class="tname">${esc(t.name)}</span>
+    </button>`;
+  }
+  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
+  return '<div class="tile emptycell"></div>';
+}
+function renderTypePage(){
+  const g = findSizeG(selSize);
+  if(!g){ setView("count"); return; }
+  const sub = curSub();
+  const fl = armedFlag ? findFlag(armedFlag) : null;
+  const rowsCSS = S.layoutTypes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
+  app.innerHTML = `
+    <div class="sizehead" style="${tileStyle(g.color, g.img)}">${esc(g.label)} – Typ wählen${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}</div>
+    <div class="grid" style="grid-template-rows:${rowsCSS}">
+      ${S.layoutTypes.map(r=>typeCellHTML(r.cells[0],sub)+typeCellHTML(r.cells[1],sub)).join("")}
+    </div>
+    <button class="backbtn" id="btnBack">✕ Abbrechen (zurück ohne Speichern)</button>`;
+  app.querySelectorAll(".tile[data-type]").forEach(btn=>{
+    btn.onclick = ()=>{
+      addCount(btn.dataset.type, selSize);
+      selSize = null;
+      setView("count");
+    };
+  });
+  app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.flag;
+      armedFlag = (armedFlag===id) ? null : id;
+      render();
+    };
+  });
+  document.getElementById("btnBack").onclick = ()=>{ selSize=null; setView("count"); };
 }
 
 /* ---------- Bericht ---------- */
 function allCountRows(counts){
-  // sortiert nach Typ-/Größen-Reihenfolge, dann Merkmal (leer zuerst)
   const rows = [];
-  const flagOrder = [""].concat(S.flags.map(f=>f.id));
-  S.types.forEach(t=>t.sizes.forEach(s=>{
-    flagOrder.forEach(fid=>{
-      const k = t.id+"|"+s.id+"|"+fid;
-      const n = counts[k]||0;
-      if(n>0) rows.push({t,s,fid,n,k});
-    });
-  }));
+  for(const k in counts){
+    const n = counts[k]; if(!(n>0)) continue;
+    const p = k.split("|");
+    const t = findType(p[0]); if(!t) continue;
+    const s = findSizeG(p[1]); if(!s) continue;
+    rows.push({t, s, fid:p[2]||"", n, k});
+  }
+  const fi = r=>{ if(!r.fid) return -1; const i=S.flags.findIndex(f=>f.id===r.fid); return i<0?99:i; };
+  rows.sort((a,b)=>
+    (S.sizes.indexOf(a.s)-S.sizes.indexOf(b.s)) ||
+    (S.types.indexOf(a.t)-S.types.indexOf(b.t)) ||
+    (fi(a)-fi(b))
+  );
   return rows;
 }
-function flagName(fid){ const f=findFlag(fid); return f?f.name:""; }
+function flagName(fid){ if(!fid) return ""; const f=findFlag(fid); return f?f.name:"(Merkmal gelöscht)"; }
 function renderReport(){
   if(!reportFieldId || !S.fields.find(f=>f.id===reportFieldId)) reportFieldId = S.activeField;
   const f = S.fields.find(f=>f.id===reportFieldId);
@@ -609,10 +651,10 @@ function renderReport(){
     const rows = allCountRows(sub.counts);
     html += `<div class="card">
       <h2 style="margin-top:0;">${esc(sub.name)} — ${subTotal(sub)} Bäume</h2>
-      ${rows.length? `<table><tr><th>Qualität</th><th>Größe</th><th>Merkmal</th><th style="text-align:right">Anzahl</th><th></th></tr>
+      ${rows.length? `<table><tr><th>Größe</th><th>Qualität</th><th>Merkmal</th><th style="text-align:right">Anzahl</th><th></th></tr>
         ${rows.map(r=>`<tr>
-          <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
           <td>${esc(r.s.label)}</td>
+          <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
           <td>${r.fid?`<span class="fbadge" style="background:${(findFlag(r.fid)||{}).color||'#666'}">${esc(flagName(r.fid))}</span>`:""}</td>
           <td class="num">${r.n}</td>
           <td style="text-align:right"><span class="corr">
@@ -627,7 +669,7 @@ function renderReport(){
   html += `
       <button class="btn primary wide" id="btnCsvField">⬇️ Excel-Export: nur „${esc(f.name)}“</button>
       <button class="btn wide" id="btnCsvAll">⬇️ Excel-Export: alle Felder</button>
-      <p class="muted">CSV-Spalten: Feld; Unterbereich; Qualität; Größe; Merkmal; Anzahl. Merkmal ist leer bei normalen Zählungen.</p>
+      <p class="muted">CSV-Spalten: Feld; Unterbereich; Größe; Qualität; Merkmal; Anzahl. Merkmal ist leer bei normalen Zählungen.</p>
     </div>`;
   app.innerHTML = html;
 
@@ -643,20 +685,20 @@ function renderReport(){
 }
 function tableHTML(agg){
   const rows = allCountRows(agg);
-  return `<table><tr><th>Qualität</th><th>Größe</th><th>Merkmal</th><th style="text-align:right">Anzahl</th></tr>
+  return `<table><tr><th>Größe</th><th>Qualität</th><th>Merkmal</th><th style="text-align:right">Anzahl</th></tr>
     ${rows.map(r=>`<tr>
-      <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
       <td>${esc(r.s.label)}</td>
+      <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
       <td>${r.fid?`<span class="fbadge" style="background:${(findFlag(r.fid)||{}).color||'#666'}">${esc(flagName(r.fid))}</span>`:""}</td>
       <td class="num">${r.n}</td>
     </tr>`).join("")}</table>`;
 }
 function exportCSV(fields){
-  let csv = "\uFEFFFeld;Unterbereich;Qualität;Größe;Merkmal;Anzahl\r\n";
+  let csv = "\uFEFFFeld;Unterbereich;Größe;Qualität;Merkmal;Anzahl\r\n";
   fields.forEach(f=>{
     f.subs.forEach(sub=>{
       allCountRows(sub.counts).forEach(r=>{
-        csv += [f.name, sub.name, r.t.name, r.s.label, flagName(r.fid), r.n]
+        csv += [f.name, sub.name, r.s.label, r.t.name, flagName(r.fid), r.n]
           .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
       });
     });
@@ -671,41 +713,94 @@ function exportCSV(fields){
 }
 
 /* ---------- Verwalten ---------- */
-function cellOptions(sel){
+function cellOptionsSizes(sel){
+  let html = `<option value="" ${!sel?"selected":""}>— leer —</option>`;
+  html += `<option value="menu" ${sel==="menu"?"selected":""}>📂 Mehr-Menü</option>`;
+  S.sizes.forEach(g=>{ html += `<option value="s:${g.id}" ${sel==="s:"+g.id?"selected":""}>${esc(g.label)}</option>`; });
+  S.flags.forEach(fl=>{ html += `<option value="f:${fl.id}" ${sel==="f:"+fl.id?"selected":""}>🏳️ ${esc(fl.name)}</option>`; });
+  return html;
+}
+function cellOptionsTypes(sel){
   let html = `<option value="" ${!sel?"selected":""}>— leer —</option>`;
   S.types.forEach(t=>{ html += `<option value="t:${t.id}" ${sel==="t:"+t.id?"selected":""}>${esc(t.name)}</option>`; });
   S.flags.forEach(fl=>{ html += `<option value="f:${fl.id}" ${sel==="f:"+fl.id?"selected":""}>🏳️ ${esc(fl.name)}</option>`; });
   return html;
 }
+function layoutEditorHTML(which, layout, optsFn){
+  let html = "";
+  layout.forEach((r,i)=>{
+    html += `<div class="row">
+      <select class="mini grow" data-lay="cell" data-w="${which}" data-i="${i}" data-c="0">${optsFn(r.cells[0])}</select>
+      <select class="mini grow" data-lay="cell" data-w="${which}" data-i="${i}" data-c="1">${optsFn(r.cells[1])}</select>
+      <button class="btn tiny" data-lay="h" data-w="${which}" data-i="${i}">${r.h==="half"?"½":"1"}</button>
+      <button class="btn tiny" data-lay="up" data-w="${which}" data-i="${i}" ${i===0?"disabled":""}>↑</button>
+      <button class="btn tiny" data-lay="dn" data-w="${which}" data-i="${i}" ${i===layout.length-1?"disabled":""}>↓</button>
+      <button class="btn tiny danger" data-lay="del" data-w="${which}" data-i="${i}">🗑</button>
+    </div>`;
+  });
+  html += `<button class="btn small" data-lay="add" data-w="${which}">＋ Zeile</button>`;
+  return html;
+}
 function renderSettings(){
   let html = `<div class="page">
     <div class="card">
-      <h2 style="margin-top:0;">📐 Zählseite anordnen</h2>
-      <p class="muted">Jede Zeile hat zwei Plätze (links/rechts) und eine Höhe: <b>1</b> = normale Kachel, <b>½</b> = halbe Höhe. Reihenfolge mit ↑/↓ ändern. Änderungen wirken sofort auf der Zählseite.</p>`;
-  S.layout.forEach((r,i)=>{
+      <h2 style="margin-top:0;">📐 Seite 1: Größen anordnen</h2>
+      <p class="muted">Erste Zählseite (Größen-Auswahl). Höhe: <b>1</b> = große Kachel, <b>½</b> = halbe Höhe. „📂 Mehr-Menü“ öffnet das Untermenü mit allen Größen, die als „Mehr“ markiert sind.</p>
+      ${layoutEditorHTML("S", S.layoutSizes, cellOptionsSizes)}
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">📐 Seite 2: Typen anordnen</h2>
+      <p class="muted">Zweite Zählseite (Typ-Auswahl nach der Größe).</p>
+      ${layoutEditorHTML("T", S.layoutTypes, cellOptionsTypes)}
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">📏 Größen</h2>
+      <p class="muted">Zentral definierte Größen – einmal anlegen, überall verwenden. ⤵︎ = ins 📂 Mehr-Menü verschieben, ⤴︎ = zurückholen. ↕ = Reihenfolge (gilt für Bericht und Mehr-Menü).</p>`;
+  S.sizes.forEach((g,gi)=>{
     html += `<div class="row">
-      <select class="mini grow" data-lay="cell" data-i="${i}" data-c="0">${cellOptions(r.cells[0])}</select>
-      <select class="mini grow" data-lay="cell" data-i="${i}" data-c="1">${cellOptions(r.cells[1])}</select>
-      <button class="btn small" data-lay="h" data-i="${i}">${r.h==="half"?"½":"1"}</button>
-      <button class="btn small" data-lay="up" data-i="${i}" ${i===0?"disabled":""}>↑</button>
-      <button class="btn small" data-lay="dn" data-i="${i}" ${i===S.layout.length-1?"disabled":""}>↓</button>
-      <button class="btn small danger" data-lay="del" data-i="${i}">🗑</button>
+      ${g.img? `<span class="thumb" style="background-image:url('${g.img}')"></span>` : `<input type="color" value="${g.color||"#3a524a"}" data-act="colG" data-g="${g.id}">`}
+      <span class="grow" style="font-size:14px;">${esc(g.label)}${g.extra?'<span class="badge">📂 Mehr</span>':""}</span>
+      <button class="btn tiny" data-act="imgG" data-g="${g.id}">📷</button>
+      <button class="btn tiny" data-act="movG" data-g="${g.id}">↕</button>
+      <button class="btn tiny" data-act="extraG" data-g="${g.id}">${g.extra?"⤴︎":"⤵︎"}</button>
+      <button class="btn tiny" data-act="renG" data-g="${g.id}">✏️</button>
+      <button class="btn tiny danger" data-act="delG" data-g="${g.id}">🗑</button>
     </div>`;
   });
-  html += `<button class="btn small" id="btnAddRow">＋ Zeile</button>
+  html += `<button class="btn small" data-act="addG">＋ Größe</button>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">🌲 Typen</h2>
+      <p class="muted">Zentral definierte Typen/Qualitäten. Nach dem Anlegen über „Seite 2: Typen anordnen“ platzieren.</p>`;
+  S.types.forEach(t=>{
+    html += `<div class="row">
+      ${t.img? `<span class="thumb" style="background-image:url('${t.img}')"></span>` : `<input type="color" value="${t.color}" data-act="colT" data-t="${t.id}">`}
+      <b class="grow" style="font-size:15px;">${esc(t.name)}</b>
+      <button class="btn tiny" data-act="imgT" data-t="${t.id}">📷</button>
+      <button class="btn tiny" data-act="movT" data-t="${t.id}">↕</button>
+      <button class="btn tiny" data-act="renT" data-t="${t.id}">✏️</button>
+      <button class="btn tiny danger" data-act="delT" data-t="${t.id}">🗑</button>
+    </div>`;
+  });
+  html += `<button class="btn small" data-act="addT">＋ Typ</button>
     </div>
 
     <div class="card">
       <h2 style="margin-top:0;">🏳️ Merkmale (Flags)</h2>
-      <p class="muted">Merkmal antippen → die nächste Zählung wird damit markiert. Im Bericht/Export eigene Spalte; leer = normale Zählung.</p>`;
+      <p class="muted">Merkmal antippen → die nächste Zählung wird damit markiert. Im Bericht/Export eigene Spalte; leer = normale Zählung. Über die Anordnungs-Editoren auf Seite 1 oder Seite 2 platzierbar.</p>`;
   S.flags.forEach(fl=>{
     html += `<div class="row">
       <input type="color" value="${fl.color}" data-act="colFl" data-fl="${fl.id}">
       <b class="grow" style="font-size:16px;">${esc(fl.name)}</b>
       <button class="btn small" data-act="renFl" data-fl="${fl.id}">✏️</button>
+      <button class="btn small danger" data-act="delFl" data-fl="${fl.id}">🗑</button>
     </div>`;
   });
-  html += `</div>
+  html += `<button class="btn small" data-act="addFl">＋ Merkmal</button>
+  </div>
 
     <div class="card">
       <h2 style="margin-top:0;">📍 Felder & Unterbereiche</h2>`;
@@ -729,49 +824,6 @@ function renderSettings(){
   html += `<button class="btn wide" data-act="addF">＋ Neues Feld anlegen</button></div>
 
     <div class="card">
-      <h2 style="margin-top:0;">📏 Größen-Vorlagen</h2>
-      <p class="muted">Vorgefertigte Größen mit Farbe/Muster. Beim „＋ Größe“ in einem Typ kannst du daraus wählen – im Typ bleibt die Größe danach frei änderbar.</p>`;
-  S.sizePresets.forEach((p,pi)=>{
-    html += `<div class="row">
-      ${p.img? `<span class="thumb" style="background-image:url('${p.img}')"></span>` : `<input type="color" value="${p.color||"#59872c"}" data-act="colP" data-p="${p.id}">`}
-      <span class="grow" style="font-size:14px;">${esc(p.label)}${(!p.img&&!p.color)?'<span class="badge">Typ-Farbe</span>':""}</span>
-      <button class="btn small" style="padding:8px 7px;min-width:34px;" data-act="imgP" data-p="${p.id}">📷</button>
-      <button class="btn small" style="padding:8px 7px;min-width:34px;" data-act="movP" data-p="${p.id}" data-i="${pi}">↕</button>
-      <button class="btn small" style="padding:8px 7px;min-width:34px;" data-act="renP" data-p="${p.id}">✏️</button>
-      <button class="btn small danger" style="padding:8px 7px;min-width:34px;" data-act="delP" data-p="${p.id}">🗑</button>
-    </div>`;
-  });
-  html += `<button class="btn small" data-act="addP">＋ Vorlage</button>
-    </div>
-
-    <div class="card">
-      <h2 style="margin-top:0;">🎨 Typen & Größen gestalten</h2>
-      <p class="muted">Pro Typ und pro Größe: Farbe wählen oder Foto hinterlegen (📷). Größen mit „Mehr“-Kennzeichen erscheinen erst nach Tippen auf die Mehr…-Taste (⤵︎/⤴︎ schaltet um).</p>`;
-  S.types.forEach(t=>{
-    html += `<div style="border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:12px;">
-      <div class="row">
-        ${t.img? `<span class="thumb" style="background-image:url('${t.img}')"></span>` : `<input type="color" value="${t.color}" data-act="colT" data-t="${t.id}">`}
-        <b class="grow" style="font-size:16px;">${esc(t.name)}</b>
-        <button class="btn small" data-act="imgT" data-t="${t.id}">📷</button>
-        <button class="btn small" data-act="renT" data-t="${t.id}">✏️</button>
-      </div>`;
-    t.sizes.forEach((s,si)=>{
-      html += `<div class="row" style="padding-left:8px;">
-        ${s.img? `<span class="thumb" style="background-image:url('${s.img}')"></span>` : `<input type="color" value="${s.color||t.color}" data-act="colSz" data-t="${t.id}" data-sz="${s.id}">`}
-        <span class="grow" style="font-size:14px;">${esc(s.label)}${s.extra?'<span class="badge">Mehr</span>':""}</span>
-        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="imgSz" data-t="${t.id}" data-sz="${s.id}">📷</button>
-        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="movSz" data-t="${t.id}" data-sz="${s.id}" data-i="${si}">↕</button>
-        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="extraSz" data-t="${t.id}" data-sz="${s.id}">${s.extra?"⤴︎":"⤵︎"}</button>
-        <button class="btn small" style="padding:8px 6px;min-width:32px;" data-act="renSz" data-t="${t.id}" data-sz="${s.id}">✏️</button>
-        <button class="btn small danger" style="padding:8px 6px;min-width:32px;" data-act="delSz" data-t="${t.id}" data-sz="${s.id}">🗑</button>
-      </div>`;
-    });
-    html += `<button class="btn small" data-act="addSz" data-t="${t.id}">＋ Größe</button>
-    </div>`;
-  });
-  html += `</div>
-
-    <div class="card">
       <h2 style="margin-top:0;">🛟 Datensicherung</h2>
       <p class="muted">Alle Daten liegen lokal auf diesem Handy. Vor dem Löschen von Browser-/Websitedaten: erst CSV exportieren oder Sicherung erstellen.</p>
       <button class="btn wide" id="btnBackup">⬇️ Sicherungsdatei erstellen</button>
@@ -782,44 +834,162 @@ function renderSettings(){
   </div>`;
   app.innerHTML = html;
 
-  /* Layout-Editor */
+  /* Layout-Editoren */
   app.querySelectorAll("[data-lay]").forEach(el=>{
-    const i = +el.dataset.i;
+    const which = el.dataset.w;
+    const lay = ()=> which==="S" ? S.layoutSizes : S.layoutTypes;
     const kind = el.dataset.lay;
     if(kind==="cell"){
-      el.onchange = ()=>{ S.layout[i].cells[+el.dataset.c] = el.value || null; save(); };
+      el.onchange = ()=>{ lay()[+el.dataset.i].cells[+el.dataset.c] = el.value || null; save(); };
       return;
     }
     el.onclick = ()=>{
-      if(kind==="h"){ S.layout[i].h = (S.layout[i].h==="half" ? "full" : "half"); }
-      if(kind==="up" && i>0){ const x=S.layout[i]; S.layout[i]=S.layout[i-1]; S.layout[i-1]=x; }
-      if(kind==="dn" && i<S.layout.length-1){ const x=S.layout[i]; S.layout[i]=S.layout[i+1]; S.layout[i+1]=x; }
-      if(kind==="del"){
-        if(S.layout.length<=1) return;
-        S.layout.splice(i,1);
-      }
+      const L = lay(); const i = +el.dataset.i;
+      if(kind==="h"){ L[i].h = (L[i].h==="half" ? "full" : "half"); }
+      if(kind==="up" && i>0){ const x=L[i]; L[i]=L[i-1]; L[i-1]=x; }
+      if(kind==="dn" && i<L.length-1){ const x=L[i]; L[i]=L[i+1]; L[i+1]=x; }
+      if(kind==="del"){ if(L.length<=1) return; L.splice(i,1); }
+      if(kind==="add"){ L.push({h:"full", cells:[null,null]}); }
       save(); render();
     };
   });
-  document.getElementById("btnAddRow").onclick = ()=>{ S.layout.push({h:"full", cells:[null,null]}); save(); render(); };
 
-  /* übrige Verwaltung */
+  /* Aktionen */
   app.querySelectorAll("[data-act]").forEach(el=>{
     const act = el.dataset.act;
     const getF  = ()=>S.fields.find(x=>x.id===el.dataset.f);
-    const getT  = ()=>S.types.find(x=>x.id===el.dataset.t);
+    const getT  = ()=>findType(el.dataset.t);
+    const getG  = ()=>findSizeG(el.dataset.g);
     const getFl = ()=>findFlag(el.dataset.fl);
 
     if(act==="colT"){ el.onchange = ()=>{ getT().color = el.value; save(); render(); }; return; }
-    if(act==="colSz"){ el.onchange = ()=>{ const s=findSize(getT(), el.dataset.sz); s.color = el.value; save(); render(); }; return; }
+    if(act==="colG"){ el.onchange = ()=>{ getG().color = el.value; save(); render(); }; return; }
     if(act==="colFl"){ el.onchange = ()=>{ getFl().color = el.value; save(); render(); }; return; }
-    if(act==="colP"){ el.onchange = ()=>{ const p=S.sizePresets.find(x=>x.id===el.dataset.p); p.color = el.value; save(); render(); }; return; }
 
     el.onclick = async ()=>{
+      /* --- Größen --- */
+      if(act==="addG"){
+        const n = await askText("Neue Größe (z. B. 2 – 2,5 m):", "");
+        if(n){ S.sizes.push({id:uid(), label:n, color:null, img:null, extra:true}); save(); render(); }
+      }
+      if(act==="renG"){
+        const g=getG(); const n = await askText("Größe umbenennen:", g.label);
+        if(n){ g.label=n; save(); render(); }
+      }
+      if(act==="movG"){
+        const g=getG();
+        if(await moveInArray(S.sizes, S.sizes.indexOf(g), "„"+g.label+"“ verschieben")){ save(); render(); }
+      }
+      if(act==="extraG"){
+        const g=getG(); g.extra = !g.extra;
+        if(g.extra){ S.layoutSizes.forEach(r=>{ r.cells = r.cells.map(c=>c==="s:"+g.id ? null : c); }); }
+        save(); render();
+      }
+      if(act==="imgG"){
+        const g=getG();
+        if(g.img){
+          const c = await askChoice("Bild für Größe „"+g.label+"“", ["Neues Foto wählen","Bild entfernen (Farbe verwenden)"]);
+          if(c===1){ g.img=null; save(); render(); return; }
+          if(c!==0) return;
+        }
+        const d = await pickImage();
+        if(d){ g.img=d; save(); render(); }
+      }
+      if(act==="delG"){
+        const g=getG();
+        if(S.sizes.length<=1){ await askConfirm("Mindestens eine Größe muss bestehen bleiben.","Verstanden"); return; }
+        let n=0;
+        S.fields.forEach(f=>f.subs.forEach(sub=>{
+          for(const k in sub.counts){ if(k.split("|")[1]===g.id) n += sub.counts[k]; }
+        }));
+        if(await askConfirm(`Größe „${g.label}“ löschen? ${n} vorhandene Zählungen dieser Größe werden mitgelöscht.`, "Löschen", true)){
+          S.sizes = S.sizes.filter(x=>x.id!==g.id);
+          S.layoutSizes.forEach(r=>{ r.cells = r.cells.map(c=>c==="s:"+g.id ? null : c); });
+          S.fields.forEach(f=>f.subs.forEach(sub=>{
+            for(const k in sub.counts){ if(k.split("|")[1]===g.id) delete sub.counts[k]; }
+            sub.log = sub.log.filter(k=>k.split("|")[1]!==g.id);
+          }));
+          save(); render();
+        }
+      }
+      /* --- Typen --- */
+      if(act==="addT"){
+        const n = await askText("Name des neuen Typs:", "");
+        if(n){ S.types.push({id:uid(), name:n, color:"#3a6d4f", img:null}); save(); render(); }
+      }
+      if(act==="renT"){
+        const t = getT(); const n = await askText("Typ-Name:", t.name);
+        if(n){ t.name=n; save(); render(); }
+      }
+      if(act==="movT"){
+        const t=getT();
+        if(await moveInArray(S.types, S.types.indexOf(t), "„"+t.name+"“ verschieben")){ save(); render(); }
+      }
+      if(act==="imgT"){
+        const t = getT();
+        if(t.img){
+          const c = await askChoice("Foto für „"+t.name+"“", ["Neues Foto wählen","Foto entfernen (Farbe verwenden)"]);
+          if(c===1){ t.img=null; save(); render(); return; }
+          if(c!==0) return;
+        }
+        const d = await pickImage();
+        if(d){ t.img=d; save(); render(); }
+      }
+      if(act==="delT"){
+        const t=getT();
+        if(S.types.length<=1){ await askConfirm("Mindestens ein Typ muss bestehen bleiben.","Verstanden"); return; }
+        let n=0;
+        S.fields.forEach(f=>f.subs.forEach(sub=>{
+          for(const k in sub.counts){ if(k.split("|")[0]===t.id) n += sub.counts[k]; }
+        }));
+        if(await askConfirm(`Typ „${t.name}“ löschen? ${n} vorhandene Zählungen dieses Typs werden mitgelöscht.`, "Löschen", true)){
+          S.types = S.types.filter(x=>x.id!==t.id);
+          S.layoutTypes.forEach(r=>{ r.cells = r.cells.map(c=>c==="t:"+t.id ? null : c); });
+          S.fields.forEach(f=>f.subs.forEach(sub=>{
+            for(const k in sub.counts){ if(k.split("|")[0]===t.id) delete sub.counts[k]; }
+            sub.log = sub.log.filter(k=>k.split("|")[0]!==t.id);
+          }));
+          save(); render();
+        }
+      }
+      /* --- Merkmale --- */
       if(act==="renFl"){
         const fl = getFl(); const n = await askText("Merkmal umbenennen:", fl.name);
         if(n){ fl.name=n; save(); render(); }
       }
+      if(act==="addFl"){
+        const n = await askText("Name des neuen Merkmals:", "");
+        if(n){ S.flags.push({id:uid(), name:n, color:"#555f5b"}); save(); render(); }
+      }
+      if(act==="delFl"){
+        const fl = getFl();
+        let n=0;
+        S.fields.forEach(f=>f.subs.forEach(sub=>{
+          for(const k in sub.counts){ if(k.split("|")[2]===fl.id) n += sub.counts[k]; }
+        }));
+        if(await askConfirm(`Merkmal „${fl.name}“ löschen?${n?` ${n} damit markierte Zählungen bleiben erhalten und werden zu normalen Zählungen (ohne Merkmal).`:""}`, "Löschen", true)){
+          S.fields.forEach(f=>f.subs.forEach(sub=>{
+            for(const k in Object.assign({}, sub.counts)){
+              const p = k.split("|");
+              if(p[2]===fl.id){
+                const nk = p[0]+"|"+p[1]+"|";
+                sub.counts[nk] = (sub.counts[nk]||0) + sub.counts[k];
+                delete sub.counts[k];
+              }
+            }
+            sub.log = sub.log.map(k=>{
+              const p = k.split("|");
+              return p[2]===fl.id ? p[0]+"|"+p[1]+"|" : k;
+            });
+          }));
+          S.flags = S.flags.filter(x=>x.id!==fl.id);
+          S.layoutSizes.forEach(r=>{ r.cells = r.cells.map(c=>c==="f:"+fl.id ? null : c); });
+          S.layoutTypes.forEach(r=>{ r.cells = r.cells.map(c=>c==="f:"+fl.id ? null : c); });
+          if(armedFlag===fl.id) armedFlag=null;
+          save(); render();
+        }
+      }
+      /* --- Felder --- */
       if(act==="addF"){
         const n = await askText("Name des neuen Feldes:", "Feld "+(S.fields.length+1));
         if(n){ S.fields.push({id:uid(), name:n, subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]}); save(); render(); }
@@ -857,105 +1027,6 @@ function renderSettings(){
           }
         }
       }
-      if(act==="renT"){
-        const t = getT(); const n = await askText("Typ-Name:", t.name);
-        if(n){ t.name=n; save(); render(); }
-      }
-      if(act==="imgT"){
-        const t = getT();
-        if(t.img){
-          const c = await askChoice("Foto für „"+t.name+"“", ["Neues Foto wählen","Foto entfernen (Farbe verwenden)"]);
-          if(c===1){ t.img=null; save(); render(); return; }
-          if(c!==0) return;
-        }
-        const d = await pickImage();
-        if(d){ t.img=d; save(); render(); }
-      }
-      if(act==="renSz"){
-        const t=getT(); const s=findSize(t, el.dataset.sz);
-        const n = await askText("Größe umbenennen:", s.label);
-        if(n){ s.label=n; save(); render(); }
-      }
-      if(act==="imgSz"){
-        const t=getT(); const s=findSize(t, el.dataset.sz);
-        if(s.img){
-          const c = await askChoice("Bild für Größe „"+s.label+"“", ["Neues Foto wählen","Bild entfernen (Farbe verwenden)"]);
-          if(c===1){ s.img=null; save(); render(); return; }
-          if(c!==0) return;
-        }
-        const d = await pickImage();
-        if(d){ s.img=d; save(); render(); }
-      }
-      if(act==="extraSz"){
-        const t=getT(); const s=findSize(t, el.dataset.sz);
-        s.extra = !s.extra;
-        save(); render();
-      }
-      if(act==="delSz"){
-        const t=getT(); const s=findSize(t, el.dataset.sz);
-        if(t.sizes.length<=1){ await askConfirm("Jeder Typ braucht mindestens eine Größe.","Verstanden"); return; }
-        let n=0;
-        S.fields.forEach(f=>f.subs.forEach(sub=>{
-          for(const k in sub.counts){ if(k.indexOf(t.id+"|"+s.id+"|")===0) n += sub.counts[k]; }
-        }));
-        if(await askConfirm(`Größe „${s.label}“ löschen? ${n} vorhandene Zählungen dieser Größe werden mitgelöscht.`, "Löschen", true)){
-          t.sizes = t.sizes.filter(x=>x.id!==s.id);
-          S.fields.forEach(f=>f.subs.forEach(sub=>{
-            for(const k in sub.counts){ if(k.indexOf(t.id+"|"+s.id+"|")===0) delete sub.counts[k]; }
-            sub.log = sub.log.filter(k=>k.indexOf(t.id+"|"+s.id+"|")!==0);
-          }));
-          save(); render();
-        }
-      }
-      if(act==="addSz"){
-        const t=getT();
-        const opts = S.sizePresets.map(p=>p.label).concat(["✏️ Eigene Größe eingeben…"]);
-        const c = await askChoice("Größe für „"+t.name+"“ hinzufügen", opts);
-        if(c===null) return;
-        if(c < S.sizePresets.length){
-          const p = S.sizePresets[c];
-          t.sizes.push({id:uid(), label:p.label, color:p.color||null, img:p.img||null, extra:false});
-          save(); render();
-        } else {
-          const n = await askText("Neue Größe (z. B. 2 – 2,5 m):", "");
-          if(n){ t.sizes.push({id:uid(), label:n, color:null, img:null, extra:false}); save(); render(); }
-        }
-      }
-      if(act==="movSz"){
-        const t=getT(); const s=findSize(t, el.dataset.sz);
-        if(await moveInArray(t.sizes, t.sizes.indexOf(s), "„"+s.label+"“ verschieben")){ save(); render(); }
-      }
-      /* --- Größen-Vorlagen --- */
-      if(act==="addP"){
-        const n = await askText("Neue Vorlage (z. B. 2 – 2,5 m):", "");
-        if(n){ S.sizePresets.push({id:uid(), label:n, color:null, img:null}); save(); render(); }
-      }
-      if(act==="renP"){
-        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
-        const n = await askText("Vorlage umbenennen:", p.label);
-        if(n){ p.label=n; save(); render(); }
-      }
-      if(act==="imgP"){
-        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
-        if(p.img){
-          const c = await askChoice("Bild für Vorlage „"+p.label+"“", ["Neues Foto wählen","Bild entfernen (Farbe verwenden)"]);
-          if(c===1){ p.img=null; save(); render(); return; }
-          if(c!==0) return;
-        }
-        const d = await pickImage();
-        if(d){ p.img=d; save(); render(); }
-      }
-      if(act==="movP"){
-        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
-        if(await moveInArray(S.sizePresets, S.sizePresets.indexOf(p), "Vorlage „"+p.label+"“ verschieben")){ save(); render(); }
-      }
-      if(act==="delP"){
-        const p = S.sizePresets.find(x=>x.id===el.dataset.p);
-        if(await askConfirm(`Vorlage „${p.label}“ löschen? Bereits in Typen verwendete Größen bleiben unverändert erhalten.`, "Löschen", true)){
-          S.sizePresets = S.sizePresets.filter(x=>x.id!==p.id);
-          save(); render();
-        }
-      }
     };
   });
 
@@ -983,7 +1054,7 @@ function renderSettings(){
     r.readAsText(file);
   };
   document.getElementById("btnReset").onclick = async ()=>{
-    if(await askConfirm("Wirklich ALLE Zählungen in ALLEN Feldern auf 0 setzen? Felder, Typen, Layout und Fotos bleiben erhalten.", "Weiter", true)){
+    if(await askConfirm("Wirklich ALLE Zählungen in ALLEN Feldern auf 0 setzen? Felder, Größen, Typen, Layout und Fotos bleiben erhalten.", "Weiter", true)){
       if(await askConfirm("Letzte Sicherheitsfrage: Zählungen unwiderruflich löschen?", "Ja, alles löschen", true)){
         S.fields.forEach(f=>f.subs.forEach(s=>{ s.counts={}; s.log=[]; }));
         save(); render();
