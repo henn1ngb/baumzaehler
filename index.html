@@ -57,7 +57,7 @@
     box-shadow:0 3px 0 rgba(0,0,0,.35);
   }
   .tile:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35);}
-  .tile .tname{font-size:clamp(19px,5.5vw,28px); line-height:1.1; text-shadow:0 1px 4px rgba(0,0,0,.6); text-align:center;}
+  .tile .tname{font-size:clamp(18px,5.2vw,27px); line-height:1.1; text-shadow:0 1px 4px rgba(0,0,0,.6); text-align:center;}
   .tile .tsub{font-size:12px; font-weight:600; opacity:.9; margin-top:3px; text-shadow:0 1px 3px rgba(0,0,0,.6);}
   .tile .tcount{
     position:absolute; top:5px; right:8px; font-size:13px; font-weight:700;
@@ -68,9 +68,7 @@
   .tile.armed{outline:4px solid var(--accent); outline-offset:-4px;}
   .tile.menutile{background:var(--panel); border:2px dashed var(--line); color:var(--text); box-shadow:none;}
   .tile.emptycell{background:transparent; box-shadow:none; pointer-events:none;}
-  .flash{animation:flash .25s ease;}
-  @keyframes flash{0%{filter:brightness(1.7);}100%{filter:brightness(1);}}
-  @media (prefers-reduced-motion: reduce){ .flash{animation:none;} .tile:active{transform:none;} }
+  @media (prefers-reduced-motion: reduce){ .tile:active{transform:none;} }
 
   .sizehead{
     margin:10px 12px 0; padding:14px; border-radius:var(--radius);
@@ -115,9 +113,26 @@
   footer.tabs{display:flex; border-top:1px solid var(--line); background:var(--panel);}
   footer.tabs button{
     flex:1; background:none; border:none; color:var(--muted);
-    font-size:13px; font-weight:700; padding:11px 4px 13px;
+    font-size:13px; font-weight:700; padding:11px 3px 13px;
   }
   footer.tabs button.active{color:var(--accent);}
+
+  /* Kundenliste beim Etikettieren */
+  .custbtn{
+    width:100%; text-align:left; margin-bottom:8px; padding:11px;
+    display:flex; align-items:center; gap:11px;
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:12px; font-weight:700;
+  }
+  .custbtn:active{transform:translateY(1px);}
+  .custbtn .swatch{width:34px; height:34px; border-radius:8px; flex:none; border:1px solid var(--line); background-size:cover; background-position:center;}
+  .custbtn .cname{display:block; font-size:17px;}
+  .custbtn .cfields{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-top:2px; white-space:normal;}
+  .custbtn .cnum{display:block; font-size:17px; font-variant-numeric:tabular-nums;}
+  .custbtn .crest{display:block; font-size:11px; font-weight:600; color:var(--muted);}
+  .custbtn.done{opacity:.6;}
+  .custbtn.gleich{background:var(--accent); color:#1a2421; border-color:var(--accent);}
+  .custbtn.gleich .cfields, .custbtn.gleich .crest{color:#3a4a2e;}
 
   .overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50;
@@ -136,12 +151,12 @@
 </head>
 <body>
 <div id="storageWarn" class="warn hidden">
-  ⚠️ Dauerhaftes Speichern ist hier nicht möglich. Bitte die App <b>im Browser bzw. über das Home-Bildschirm-Icon öffnen</b> – sonst gehen Zählungen beim Schließen verloren.
+  ⚠️ Dauerhaftes Speichern ist hier nicht möglich. Bitte die App <b>im Browser bzw. über das Home-Bildschirm-Icon öffnen</b> – sonst gehen Daten beim Schließen verloren.
 </div>
 <div id="app"></div>
 <footer class="tabs">
-  <button id="tabCount">🌲 Zählen</button>
   <button id="tabLabel">🏷️ Etikett</button>
+  <button id="tabCount">🌲 Zählen</button>
   <button id="tabReport">📊 Bericht</button>
   <button id="tabSettings">⚙️ Verwalten</button>
 </footer>
@@ -158,6 +173,9 @@ function tileStyle(color, img){
     ? "background-image:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.38)),url('"+img+"');background-size:cover;background-position:center;background-color:"+(color||"#3a524a")+";"
     : "background:"+(color||"#3a524a")+";";
 }
+function swatchStyle(color, img){
+  return img ? "background-image:url('"+img+"');background-color:"+(color||"#3a524a")+";" : "background:"+(color||"#3a524a")+";";
+}
 function svgURI(svg){ return "data:image/svg+xml;utf8," + encodeURIComponent(svg); }
 const PAT = {
   rotweiss:  svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#d22a2a" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>'),
@@ -166,7 +184,7 @@ const PAT = {
   lilaweiss: svgURI('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48"><rect width="48" height="48" fill="#f4f4f4"/><g stroke="#6b46c1" stroke-width="11"><line x1="-14" y1="62" x2="62" y2="-14"/><line x1="10" y1="62" x2="86" y2="-14"/><line x1="-38" y1="62" x2="38" y2="-14"/></g></svg>')
 };
 
-/* ================= Eigene Dialoge ================= */
+/* ================= Dialoge ================= */
 function buildOverlay(inner){
   const ov = document.createElement("div");
   ov.className = "overlay";
@@ -237,30 +255,38 @@ function pickImage(){
   });
 }
 
-/* ================= Standarddaten =================
-   Ablauf: erst GRÖSSE wählen (Seite 1), dann TYP (Seite 2).
-   Größen und Typen sind zentral definiert; Zähl-Schlüssel: typId|größenId|merkmalId */
-const KEY = "baumzaehler_v4";
-const OLDKEYS = ["baumzaehler_v3","baumzaehler_v2","baumzaehler_v1"];
+/* ================= Daten =================
+   EINE Ebene: Kategorie (= Typ + Größe kombiniert), z. B. "NM1 1,75 – 2 m"
+   Zählungen : katId|merkmalId
+   Etiketten : katId|kundeId|merkmalId   (kundeId "gleich" = allgemeines Systemetikett) */
+const KEY = "baumzaehler_v5";
+const OLDKEYS = ["baumzaehler_v4","baumzaehler_v3","baumzaehler_v2","baumzaehler_v1"];
+const GLEICH = "gleich";
 let storageOK = true;
 try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); }
 catch(e){ storageOK = false; document.getElementById("storageWarn").classList.remove("hidden"); }
 let memFallback = null;
 
 function newSub(name){ return {id:uid(), name:name, counts:{}, log:[], labels:{}, llog:[]}; }
+function cat(label, color, img, extra){ return {id:uid(), label:label, color:color||null, img:img||null, extra:!!extra}; }
+
 function defaultState(){
-  const gs = (label,color,img,extra)=>({id:uid(), label:label, color:color||null, img:img||null, extra:!!extra});
-  const s2   = gs("2 – 2,4 m",     null,      PAT.rotweiss),
-        s175 = gs("1,75 – 2 m",    null,      PAT.gelbweiss),
-        s15  = gs("1,5 – 1,75 m",  null,      PAT.lilaweiss),
-        s1   = gs("1 – 1,5 m",     null,      PAT.gruenweiss),
-        nm05 = gs("NM 0,5 – 1 m",  "#669d34"),
-        nm0  = gs("NM 0 – 0,5 m",  "#669d34"),
-        s35  = gs("3,5 - 4,5 m",   "#59872c", null, true),
-        s45  = gs("4,5 - 8 m",     "#59872c", null, true),
-        s24  = gs("2,4 – 3,5 m",   "#59872c"),
-        bl05 = gs("Blau 0,5 – 1 m","#00a1d8", null, true),
-        bl0  = gs("Blau 0 – 0,5 m","#2196c4", null, true);
+  const C = [];
+  const push = (grp, size, color, img, extra)=>{ const c = cat(grp+" "+size, color, img, extra); C.push(c); return c; };
+  const S1=[["2 – 2,4 m",null,PAT.rotweiss],["1,75 – 2 m",null,PAT.gelbweiss],["1,5 – 1,75 m",null,PAT.lilaweiss],["1 – 1,5 m",null,PAT.gruenweiss]];
+  const nm1 = S1.map(s=>push("NM1", s[0], s[1]||"#59872c", s[2]));
+  const nm2 = S1.map(s=>push("NM2", s[0], s[1]||"#2e4d1e", s[2]));
+  const bf1 = S1.map(s=>push("BF1", s[0], "#103a52", s[2]));
+  const bf2 = S1.map(s=>push("BF2", s[0], "#1d6e8e", s[2], true));
+  // Zusatzkategorien im Mehr-Menü
+  push("NM1", "2,4 – 3,5 m", "#59872c", null, true);
+  push("NM1", "3,5 – 4,5 m", "#59872c", null, true);
+  push("NM1", "4,5 – 8 m",   "#59872c", null, true);
+  push("Sonder", "1 – 2,5 m","#0a2f8c", null, true);
+  push("Vogel",  "1 – 2,5 m","#7a1010", null, true);
+  push("U NM",   "0 – 1 m",  "#669d34", null, true);
+  push("U Blau", "0 – 1 m",  "#00a1d8", null, true);
+
   const fieldDef = [
     ["Usseln",       ["Oben Rechts","Oben ab Schneise bis Gabel","Oben Links ab Gabel","Unten NM only","Unten gemischter Streifen"]],
     ["Kapelle",      ["Links außen","Links haupt","Rechts haupt","Rechts außen"]],
@@ -270,127 +296,112 @@ function defaultState(){
     ["Kettinghausen",["Oben Streifen"]]
   ];
   return {
-    v:4,
-    sizes:[s2,s175,s15,s1,nm05,nm0,s35,s45,s24,bl05,bl0],
-    types:[
-      {id:"son", name:"Sonder (Müll)", color:"#0a2f8c", img:null},
-      {id:"mue", name:"Vogel",         color:"#7a1010", img:null},
-      {id:"blf", name:"Blaufichte",    color:"#103a52", img:null},
-      {id:"u",   name:"Untergröße",    color:"#858585", img:null},
-      {id:"nm1", name:"NM 1",          color:"#59872c", img:null},
-      {id:"nm2", name:"NM 2",          color:"#2e4d1e", img:null}
-    ],
+    v:5,
+    cats:C,
     flags:[
       {id:"vogel", name:"Überlänge", color:"#474747"},
       {id:"laus",  name:"Krum",      color:"#474747"}
     ],
-    customers:[ {id:"own", name:"Eigenes Etikett", color:"#ffd23f", own:true} ],
+    customers:[],
+    gleich:{name:"Gleich (System)", color:"#ffd23f"},
     orders:{},
-    layoutSizes:[
-      {h:"half", cells:["menu",       "s:"+s24.id]},
-      {h:"full", cells:["s:"+s175.id, "s:"+s2.id]},
-      {h:"full", cells:["s:"+s1.id,   "s:"+s15.id]},
-      {h:"half", cells:["s:"+nm0.id,  "s:"+nm05.id]}
-    ],
-    layoutTypes:[
-      {h:"half", cells:["t:son","t:mue"]},
-      {h:"full", cells:["t:blf","t:u"]},
-      {h:"full", cells:["t:nm1","t:nm2"]},
-      {h:"half", cells:["f:vogel","f:laus"]}
+    layout:[
+      {h:"half", cells:["menu",        "c:"+bf1[0].id]},
+      {h:"full", cells:["c:"+nm1[1].id,"c:"+nm1[0].id]},
+      {h:"full", cells:["c:"+nm1[3].id,"c:"+nm1[2].id]},
+      {h:"half", cells:["c:"+nm2[1].id,"c:"+nm2[0].id]}
     ],
     fields: fieldDef.map(f=>({id:uid(), name:f[0], subs:f[1].map(n=>newSub(n))})),
     activeField:null, activeSub:null
   };
 }
 
-/* ---- Migration v3 (Typ-zuerst mit Größen je Typ) -> v4 (zentrale Größen) ---- */
-function migrateV3(o){
+/* ---- Migration: v4 (Typ + Größe getrennt) -> v5 (kombinierte Kategorien) ---- */
+function migrateV4(o){
   const s = defaultState();
   if(o.flags && o.flags.length) s.flags = o.flags;
-  // zentrale Größen aus allen Typ-Größen zusammenführen (nach Bezeichnung)
-  const sizes = []; const mapKey = {}; // "altTyp|altGrößenId" -> neue GrößenId
-  (o.types||[]).forEach(ot=>{
-    (ot.sizes||[]).forEach(os=>{
-      let g = sizes.find(x=>normTxt(x.label)===normTxt(os.label));
-      if(!g){
-        g = {id:uid(), label:os.label, color:os.color||null, img:os.img||null, extra:false};
-        sizes.push(g);
-      }
-      mapKey[ot.id+"|"+os.id] = g.id;
+  if(o.customers && o.customers.length){
+    s.customers = o.customers.filter(c=>!c.own).map(c=>({id:c.id, name:c.name, color:c.color, img:c.img||null}));
+    const own = o.customers.find(c=>c.own);
+    if(own) s.gleich = {name:"Gleich (System)", color:own.color||"#ffd23f"};
+  }
+  // Kategorien aus vorhandenen Kombinationen bilden
+  const cats = []; const map = {};   // "typId|größenId" -> katId
+  const used = {};
+  (o.fields||[]).forEach(f=>(f.subs||[]).forEach(sub=>{
+    for(const k in (sub.counts||{})){ const p=k.split("|"); used[p[0]+"|"+p[1]]=true; }
+    for(const k in (sub.labels||{})){ const p=k.split("|"); used[p[0]+"|"+p[1]]=true; }
+  }));
+  (o.types||[]).forEach(t=>{
+    (o.sizes||[]).forEach(g=>{
+      const key = t.id+"|"+g.id;
+      if(!used[key]) return;
+      const c = cat(t.name+" "+g.label, g.color||t.color, g.img||t.img||null, true);
+      cats.push(c); map[key] = c.id;
     });
   });
-  if(sizes.length) s.sizes = sizes;
-  // Typen ohne Größen übernehmen
-  if(o.types && o.types.length){
-    s.types = o.types.map(t=>({
-      id:t.id,
-      name: normTxt(t.name)===normTxt("Müll (unverkäuflich)") ? "Vogel" : t.name,
-      color:t.color, img:t.img||null
-    }));
+  if(cats.length){
+    // Standardkategorien behalten, migrierte anhängen (im Mehr-Menü)
+    s.cats = s.cats.concat(cats);
   }
-  // Typen-Anordnung aus der alten Zählseiten-Anordnung
-  if(o.layout && o.layout.length) s.layoutTypes = o.layout;
-  // Größen-Anordnung: Standardgerüst, per Bezeichnung zugeordnet
-  const find = lbl=>{
-    const n = normTxt(lbl);
-    const g = s.sizes.find(x=>{ const a=normTxt(x.label); return a===n || a.endsWith(n) || n.endsWith(a); });
-    return g ? "s:"+g.id : null;
-  };
-  s.layoutSizes = [
-    {h:"half", cells:["menu", find("2,5 – 3,5 m")]},
-    {h:"full", cells:[find("2 – 2,5 m"),  find("1,75 – 2 m")]},
-    {h:"full", cells:[find("1,5 – 1,75 m"), find("1 – 1,5 m")]},
-    {h:"half", cells:[find("0,5 – 1 m"), find("0 – 0,5 m")]}
-  ];
-  // nicht platzierte Größen ins Mehr-Menü
-  const placed = new Set();
-  s.layoutSizes.forEach(r=>r.cells.forEach(c=>{ if(c && c.indexOf("s:")===0) placed.add(c.slice(2)); }));
-  s.sizes.forEach(g=>{ if(!placed.has(g.id)) g.extra = true; });
-  // Felder + Zählungen umschlüsseln
+  // Bestellungen umschlüsseln (alt: kunde|typ|größe)
+  s.orders = {};
+  for(const ok in (o.orders||{})){
+    const p = ok.split("|");
+    const cid = map[p[1]+"|"+p[2]];
+    if(cid) s.orders[p[0]+"|"+cid] = o.orders[ok];
+  }
+  // Felder, Zählungen, Etiketten
   if(o.fields && o.fields.length){
     s.fields = o.fields.map(f=>({
       id:f.id, name:f.name,
       subs:(f.subs||[]).map(sub=>{
-        const counts = {}, log = [];
+        const counts={}, log=[], labels={}, llog=[];
         for(const k in (sub.counts||{})){
-          const p = k.split("|");
-          const g = mapKey[p[0]+"|"+p[1]];
-          if(!g) continue;
-          const nk = p[0]+"|"+g+"|"+(p[2]||"");
-          counts[nk] = (counts[nk]||0) + sub.counts[k];
+          const p=k.split("|"); const c=map[p[0]+"|"+p[1]]; if(!c) continue;
+          const nk=c+"|"+(p[2]||"");
+          counts[nk]=(counts[nk]||0)+sub.counts[k];
         }
-        (sub.log||[]).forEach(k=>{
-          const p = k.split("|");
-          const g = mapKey[p[0]+"|"+p[1]];
-          if(g) log.push(p[0]+"|"+g+"|"+(p[2]||""));
+        (sub.log||[]).forEach(k=>{ const p=k.split("|"); const c=map[p[0]+"|"+p[1]]; if(c) log.push(c+"|"+(p[2]||"")); });
+        for(const k in (sub.labels||{})){
+          const p=k.split("|"); const c=map[p[0]+"|"+p[1]]; if(!c) continue;
+          const own = (o.customers||[]).find(x=>x.id===p[2] && x.own);
+          const cust = own ? GLEICH : p[2];
+          const nk=c+"|"+cust+"|"+(p[3]||"");
+          labels[nk]=(labels[nk]||0)+sub.labels[k];
+        }
+        (sub.llog||[]).forEach(k=>{
+          const p=k.split("|"); const c=map[p[0]+"|"+p[1]]; if(!c) return;
+          const own = (o.customers||[]).find(x=>x.id===p[2] && x.own);
+          llog.push(c+"|"+(own?GLEICH:p[2])+"|"+(p[3]||""));
         });
-        return {id:sub.id, name:sub.name, counts:counts, log:log};
+        return {id:sub.id, name:sub.name, counts:counts, log:log, labels:labels, llog:llog};
       })
     }));
   }
   s.activeField = o.activeField; s.activeSub = o.activeSub;
   return s;
 }
-function migrateAncient(o){
-  const s = defaultState();
-  if(o.fields && o.fields.length){
-    s.fields = o.fields.map(f=>({id:f.id, name:f.name, subs:(f.subs||[]).map(sub=>({id:sub.id, name:sub.name, counts:{}, log:[]}))}));
-  }
-  return s;
-}
-function ensureLabelStructs(s){
-  if(!s.customers || !s.customers.length) s.customers = [{id:"own", name:"Eigenes Etikett", color:"#ffd23f", own:true}];
+function ensureStructs(s){
+  if(!s.customers) s.customers = [];
+  if(!s.gleich) s.gleich = {name:"Gleich (System)", color:"#ffd23f"};
   if(!s.orders) s.orders = {};
   (s.fields||[]).forEach(f=>(f.subs||[]).forEach(sub=>{
-    if(!sub.labels) sub.labels = {};
-    if(!sub.llog)   sub.llog   = [];
+    if(!sub.counts) sub.counts={}; if(!sub.log) sub.log=[];
+    if(!sub.labels) sub.labels={}; if(!sub.llog) sub.llog=[];
   }));
   return s;
 }
 function normalize(s){
-  if(s && s.v===4 && s.sizes && s.types && s.flags && s.layoutSizes && s.layoutTypes && s.fields) return ensureLabelStructs(s);
-  if(s && s.types && s.types.length && s.types[0] && s.types[0].sizes) return ensureLabelStructs(migrateV3(s));
-  if(s && s.fields) return ensureLabelStructs(migrateAncient(s));
+  if(s && s.v===5 && s.cats && s.layout && s.fields) return ensureStructs(s);
+  if(s && s.types && s.sizes) return ensureStructs(migrateV4(s));   // v4
+  if(s && s.types) {                                                 // v3 und älter: Felder retten
+    const d = defaultState();
+    if(s.fields && s.fields.length){
+      d.fields = s.fields.map(f=>({id:f.id, name:f.name, subs:(f.subs||[]).map(x=>newSub(x.name))}));
+    }
+    return ensureStructs(d);
+  }
   return defaultState();
 }
 function load(){
@@ -412,193 +423,170 @@ save();
 
 function ensureActiveSub(){
   const f = curField();
-  if(!f.subs.length) f.subs.push({id:uid(), name:"Bereich A", counts:{}, log:[]});
+  if(!f.subs.length) f.subs.push(newSub("Bereich A"));
   if(!S.activeSub || !f.subs.find(s=>s.id===S.activeSub)) S.activeSub = f.subs[0].id;
 }
 function save(){
   if(!storageOK){ memFallback = S; return; }
   try{ localStorage.setItem(KEY, JSON.stringify(S)); }
-  catch(e){
-    alert("Achtung: Speichern fehlgeschlagen! Möglicherweise zu viele/zu große Fotos. Bitte Fotos entfernen oder Speicherplatz prüfen.");
-  }
+  catch(e){ alert("Achtung: Speichern fehlgeschlagen! Möglicherweise zu viele/zu große Fotos."); }
 }
 function curField(){ return S.fields.find(f=>f.id===S.activeField); }
 function curSub(){ return curField().subs.find(s=>s.id===S.activeSub); }
-function findSizeG(sid){ return S.sizes.find(x=>x.id===sid); }
-function findType(tid){ return S.types.find(x=>x.id===tid); }
+function findCat(cid){ return S.cats.find(x=>x.id===cid); }
 function findFlag(fid){ return S.flags.find(x=>x.id===fid); }
+function findCust(cid){ return cid===GLEICH ? {id:GLEICH, name:S.gleich.name, color:S.gleich.color, sys:true} : S.customers.find(x=>x.id===cid); }
 
-/* ================= Zähl-Logik ================= */
-let armedFlag = null;   // Merkmal für die nächste Zählung
-let selSize  = null;    // gewählte Größe (Seite 1 -> Seite 2)
+/* ================= Logik ================= */
+let armedFlag = null;
+let selCat = null;
 
-function addCount(typeId, sizeId){
+function addCount(catId){
   const sub = curSub();
-  const k = typeId + "|" + sizeId + "|" + (armedFlag||"");
-  sub.counts[k] = (sub.counts[k]||0) + 1;
-  sub.log.push(k);
-  if(sub.log.length > 3000) sub.log.shift();
-  armedFlag = null;
-  save();
+  const k = catId+"|"+(armedFlag||"");
+  sub.counts[k] = (sub.counts[k]||0)+1;
+  sub.log.push(k); if(sub.log.length>3000) sub.log.shift();
+  armedFlag = null; save();
   if(navigator.vibrate) navigator.vibrate(25);
 }
-function undo(){
-  const sub = curSub();
-  const k = sub.log.pop();
-  if(!k) return;
+function undoCount(){
+  const sub = curSub(); const k = sub.log.pop(); if(!k) return;
   if(sub.counts[k]) sub.counts[k]--;
   if(sub.counts[k]===0) delete sub.counts[k];
   save(); render();
 }
-function adjust(sub, k, delta){
-  sub.counts[k] = Math.max(0,(sub.counts[k]||0) + delta);
-  if(sub.counts[k]===0) delete sub.counts[k];
-  save(); render();
-}
-function subTotal(sub){ return Object.values(sub.counts).reduce((a,b)=>a+b,0); }
-function sizeTotalInSub(sub, sizeId){
-  let n=0; for(const k in sub.counts){ if(k.split("|")[1]===sizeId) n += sub.counts[k]; }
-  return n;
-}
-function typeSizeTotalInSub(sub, typeId, sizeId){
-  let n=0; for(const k in sub.counts){ const p=k.split("|"); if(p[0]===typeId && p[1]===sizeId) n += sub.counts[k]; }
-  return n;
-}
-function flagTotalInSub(sub, flagId){
-  let n=0; for(const k in sub.counts){ if(k.split("|")[2]===flagId) n += sub.counts[k]; }
-  return n;
-}
-
-/* ---- Etikettieren: Schlüssel typId|größenId|kundenId|merkmalId ---- */
-function findCust(cid){ return S.customers.find(x=>x.id===cid); }
-function orderKey(cid,tid,sid){ return cid+"|"+tid+"|"+sid; }
-function orderQty(cid,tid,sid){ return S.orders[orderKey(cid,tid,sid)] || 0; }
-function addLabel(typeId, sizeId, custId){
+function addLabel(catId, custId){
   const sub = curSub();
-  if(!sub.labels) sub.labels = {}; if(!sub.llog) sub.llog = [];
-  const k = typeId+"|"+sizeId+"|"+custId+"|"+(armedFlag||"");
-  sub.labels[k] = (sub.labels[k]||0) + 1;
-  sub.llog.push(k);
-  if(sub.llog.length > 3000) sub.llog.shift();
-  armedFlag = null;
-  save();
+  const k = catId+"|"+custId+"|"+(armedFlag||"");
+  sub.labels[k] = (sub.labels[k]||0)+1;
+  sub.llog.push(k); if(sub.llog.length>3000) sub.llog.shift();
+  armedFlag = null; save();
   if(navigator.vibrate) navigator.vibrate(25);
 }
 function undoLabel(){
-  const sub = curSub();
-  if(!sub.llog || !sub.llog.length) return;
-  const k = sub.llog.pop();
+  const sub = curSub(); const k = (sub.llog||[]).pop(); if(!k) return;
   if(sub.labels[k]) sub.labels[k]--;
   if(sub.labels[k]===0) delete sub.labels[k];
   save(); render();
 }
+function adjust(sub, k, delta, isLabel){
+  const m = isLabel ? sub.labels : sub.counts;
+  m[k] = Math.max(0,(m[k]||0)+delta);
+  if(m[k]===0) delete m[k];
+  save(); render();
+}
+function subTotal(sub){ return Object.values(sub.counts).reduce((a,b)=>a+b,0); }
 function subLabelTotal(sub){ return Object.values(sub.labels||{}).reduce((a,b)=>a+b,0); }
-function labelSizeTotalInSub(sub, sizeId){
-  let n=0; for(const k in (sub.labels||{})){ if(k.split("|")[1]===sizeId) n += sub.labels[k]; }
+function catTotalInSub(sub, catId){
+  let n=0; for(const k in sub.counts){ if(k.split("|")[0]===catId) n+=sub.counts[k]; }
   return n;
 }
-function labelTypeSizeTotalInSub(sub, typeId, sizeId){
-  let n=0; for(const k in (sub.labels||{})){ const p=k.split("|"); if(p[0]===typeId && p[1]===sizeId) n += sub.labels[k]; }
+function labelCatTotalInSub(sub, catId){
+  let n=0; for(const k in (sub.labels||{})){ if(k.split("|")[0]===catId) n+=sub.labels[k]; }
   return n;
 }
-/* Fortschritt eines Kunden für Typ+Größe über ALLE Felder */
-function custProgress(custId, typeId, sizeId){
-  let total = 0; const byField = [];
+function flagTotalInSub(sub, flagId, isLabel){
+  const m = isLabel ? (sub.labels||{}) : sub.counts;
+  const idx = isLabel ? 2 : 1;
+  let n=0; for(const k in m){ if(k.split("|")[idx]===flagId) n+=m[k]; }
+  return n;
+}
+function orderKey(cid,catId){ return cid+"|"+catId; }
+function orderQty(cid,catId){ return S.orders[orderKey(cid,catId)]||0; }
+function custProgress(custId, catId){
+  let total=0; const byField=[];
   S.fields.forEach(f=>{
-    let n = 0;
+    let n=0;
     f.subs.forEach(sub=>{
       for(const k in (sub.labels||{})){
-        const p = k.split("|");
-        if(p[0]===typeId && p[1]===sizeId && p[2]===custId) n += sub.labels[k];
+        const p=k.split("|");
+        if(p[0]===catId && p[1]===custId) n+=sub.labels[k];
       }
     });
-    if(n>0){ total += n; byField.push({name:f.name, n:n}); }
+    if(n>0){ total+=n; byField.push({name:f.name, n:n}); }
   });
-  return {total:total, byField:byField, target:orderQty(custId,typeId,sizeId)};
+  return {total:total, byField:byField, target:orderQty(custId,catId)};
 }
 function custGrandTotal(custId){
   let n=0;
   S.fields.forEach(f=>f.subs.forEach(sub=>{
-    for(const k in (sub.labels||{})){ if(k.split("|")[2]===custId) n += sub.labels[k]; }
+    for(const k in (sub.labels||{})){ if(k.split("|")[1]===custId) n+=sub.labels[k]; }
   }));
   return n;
 }
 
 /* ================= Ansichten ================= */
 const app = document.getElementById("app");
-let view = "count";     // count | sizemenu | type | lcount | lsizemenu | ltype | lcust | report | settings
+let view = "lcount";   // lcount | lmenu | lcust | count | cmenu | report | settings
 let reportFieldId = null;
-let selType = null;     // gewählter Typ beim Etikettieren
 
 function setView(v){ view=v; render(); }
-document.getElementById("tabCount").onclick    = ()=>{ selSize=null; setView("count"); };
-document.getElementById("tabLabel").onclick    = ()=>{ selSize=null; selType=null; setView("lcount"); };
+document.getElementById("tabLabel").onclick    = ()=>{ selCat=null; setView("lcount"); };
+document.getElementById("tabCount").onclick    = ()=>{ selCat=null; setView("count"); };
 document.getElementById("tabReport").onclick   = ()=>{ reportFieldId = S.activeField; setView("report"); };
 document.getElementById("tabSettings").onclick = ()=>setView("settings");
 
 function render(){
-  ["tabCount","tabLabel","tabReport","tabSettings"].forEach(id=>document.getElementById(id).classList.remove("active"));
-  if(view==="count"||view==="sizemenu"||view==="type") document.getElementById("tabCount").classList.add("active");
-  if(view==="lcount"||view==="lsizemenu"||view==="ltype"||view==="lcust") document.getElementById("tabLabel").classList.add("active");
+  ["tabLabel","tabCount","tabReport","tabSettings"].forEach(id=>document.getElementById(id).classList.remove("active"));
+  if(view==="lcount"||view==="lmenu"||view==="lcust") document.getElementById("tabLabel").classList.add("active");
+  if(view==="count"||view==="cmenu") document.getElementById("tabCount").classList.add("active");
   if(view==="report") document.getElementById("tabReport").classList.add("active");
   if(view==="settings") document.getElementById("tabSettings").classList.add("active");
-  if(view==="count") renderCount();
-  else if(view==="sizemenu") renderSizeMenu();
-  else if(view==="type") renderTypePage();
-  else if(view==="lcount") renderLabelSizes();
-  else if(view==="lsizemenu") renderLabelSizeMenu();
-  else if(view==="ltype") renderLabelTypes();
-  else if(view==="lcust") renderLabelCustomers();
+  if(view==="lcount") renderMain(true);
+  else if(view==="lmenu") renderMenu(true);
+  else if(view==="lcust") renderCustomers();
+  else if(view==="count") renderMain(false);
+  else if(view==="cmenu") renderMenu(false);
   else if(view==="report") renderReport();
   else renderSettings();
 }
 
-function keyText(k){
-  const p = k.split("|");
-  const t = findType(p[0]), s = findSizeG(p[1]), fl = p[2] ? findFlag(p[2]) : null;
-  return (s?esc(s.label):"?") + " · " + (t?esc(t.name):"?") + (fl ? " · " + esc(fl.name) : "");
-}
-function lastEntryText(sub){
-  const k = sub.log[sub.log.length-1];
-  if(!k) return "Noch kein Eintrag in diesem Bereich";
-  return "Zuletzt: <b>" + keyText(k) + "</b>";
-}
-function flagCellHTML(fid, sub){
+function flagCellHTML(fid, sub, isLabel){
   const fl = findFlag(fid);
   if(!fl) return '<div class="tile emptycell"></div>';
   const armed = armedFlag===fl.id;
   const dis = armedFlag && armedFlag!==fl.id;
-  return `<button class="tile flagtile ${armed?"armed":""}" ${dis?'style="opacity:.3;pointer-events:none;background:'+fl.color+'"':'style="background:'+fl.color+'"'} data-flag="${fl.id}">
-    <span class="tcount">${flagTotalInSub(sub, fl.id)}</span>
+  return `<button class="tile flagtile ${armed?"armed":""}" style="background:${fl.color};${dis?"opacity:.3;pointer-events:none;":""}" data-flag="${fl.id}">
+    <span class="tcount">${flagTotalInSub(sub, fl.id, isLabel)}</span>
     <span class="tname">${esc(fl.name)}</span>
-    <span class="tsub">${armed ? "✓ aktiv" : "Merkmal für nächste Zählung"}</span>
+    <span class="tsub">${armed ? "✓ aktiv" : "Merkmal für nächsten Baum"}</span>
   </button>`;
 }
-
-/* ---------- Seite 1: Größen ---------- */
-function sizeCellHTML(ref, sub){
+function catCellHTML(ref, sub, isLabel){
   if(!ref) return '<div class="tile emptycell"></div>';
   if(ref==="menu"){
-    const extras = S.sizes.filter(x=>x.extra);
+    const n = S.cats.filter(x=>x.extra).length;
     return `<button class="tile menutile" data-menu="1">
       <span class="tname" style="font-size:clamp(16px,4.8vw,22px);">📂 Mehr…</span>
-      <span class="tsub">${extras.length} weitere Größen</span>
+      <span class="tsub">${n} weitere</span>
     </button>`;
   }
-  if(ref.indexOf("s:")===0){
-    const g = findSizeG(ref.slice(2));
-    if(!g) return '<div class="tile emptycell"></div>';
-    return `<button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
-      <span class="tcount">${sizeTotalInSub(sub, g.id)}</span>
-      <span class="tname">${esc(g.label)}</span>
+  if(ref.indexOf("c:")===0){
+    const c = findCat(ref.slice(2));
+    if(!c) return '<div class="tile emptycell"></div>';
+    return `<button class="tile" data-cat="${c.id}" style="${tileStyle(c.color, c.img)}">
+      <span class="tcount">${isLabel? labelCatTotalInSub(sub,c.id) : catTotalInSub(sub,c.id)}</span>
+      <span class="tname">${esc(c.label)}</span>
     </button>`;
   }
-  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
+  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub, isLabel);
   return '<div class="tile emptycell"></div>';
 }
-function renderCount(){
+function lastText(sub, isLabel){
+  if(isLabel){
+    const k = (sub.llog||[])[(sub.llog||[]).length-1];
+    if(!k) return "Noch kein Etikett in diesem Bereich";
+    const p=k.split("|"); const c=findCat(p[0]); const cu=findCust(p[1]); const fl=p[2]?findFlag(p[2]):null;
+    return "Zuletzt: <b>"+(c?esc(c.label):"?")+" → "+(cu?esc(cu.name):"?")+(fl?" · "+esc(fl.name):"")+"</b>";
+  }
+  const k = sub.log[sub.log.length-1];
+  if(!k) return "Noch keine Zählung in diesem Bereich";
+  const p=k.split("|"); const c=findCat(p[0]); const fl=p[1]?findFlag(p[1]):null;
+  return "Zuletzt: <b>"+(c?esc(c.label):"?")+(fl?" · "+esc(fl.name):"")+"</b>";
+}
+function renderMain(isLabel){
   const f = curField(), sub = curSub();
-  const rowsCSS = S.layoutSizes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
+  const rowsCSS = S.layout.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
   app.innerHTML = `
     <header>
       <div class="ctx">
@@ -607,538 +595,324 @@ function renderCount(){
       </div>
     </header>
     <div class="undobar">
-      <div class="last">${lastEntryText(sub)} &nbsp;·&nbsp; Gesamt: <b>${subTotal(sub)}</b></div>
-      <button id="btnUndo" ${sub.log.length? "":"disabled"}>↩︎ Rückgängig</button>
+      <div class="last">${isLabel?"🏷️ ":"🌲 "}${lastText(sub,isLabel)} &nbsp;·&nbsp; <b>${isLabel?subLabelTotal(sub):subTotal(sub)}</b></div>
+      <button id="btnUndo" ${(isLabel?(sub.llog||[]).length:sub.log.length)? "":"disabled"}>↩︎ Rückgängig</button>
     </div>
     <div class="grid" style="grid-template-rows:${rowsCSS}">
-      ${S.layoutSizes.map(r=>sizeCellHTML(r.cells[0],sub)+sizeCellHTML(r.cells[1],sub)).join("")}
+      ${S.layout.map(r=>catCellHTML(r.cells[0],sub,isLabel)+catCellHTML(r.cells[1],sub,isLabel)).join("")}
     </div>`;
   document.getElementById("selField").onchange = e=>{ S.activeField=e.target.value; ensureActiveSub(); armedFlag=null; save(); render(); };
   document.getElementById("selSub").onchange   = e=>{ S.activeSub=e.target.value; armedFlag=null; save(); render(); };
-  document.getElementById("btnUndo").onclick   = undo;
-  wireCountButtons();
+  document.getElementById("btnUndo").onclick   = isLabel ? undoLabel : undoCount;
+  wireCats(isLabel);
 }
-function wireCountButtons(){
-  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
-    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("type"); };
-  });
-  app.querySelectorAll(".tile[data-menu]").forEach(btn=>{
-    btn.onclick = ()=>setView("sizemenu");
-  });
-  app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const id = btn.dataset.flag;
-      armedFlag = (armedFlag===id) ? null : id;
-      render();
-    };
-  });
-}
-
-/* ---------- Mehr-Menü (weitere Größen) ---------- */
-function renderSizeMenu(){
+function renderMenu(isLabel){
   const sub = curSub();
-  const extras = S.sizes.filter(x=>x.extra);
+  const extras = S.cats.filter(x=>x.extra);
   app.innerHTML = `
-    <div class="sizehead" style="background:var(--panel2);">📂 Weitere Größen</div>
-    <div class="grid" style="grid-template-rows:repeat(${Math.max(1,Math.ceil(extras.length/2))},1fr)">
-      ${extras.map(g=>`
-        <button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
-          <span class="tcount">${sizeTotalInSub(sub, g.id)}</span>
-          <span class="tname">${esc(g.label)}</span>
-        </button>`).join("")}
-      ${extras.length%2 ? '<div class="tile emptycell"></div>' : ""}
-    </div>
-    <button class="backbtn" id="btnBack">← Zurück</button>`;
-  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
-    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("type"); };
-  });
-  document.getElementById("btnBack").onclick = ()=>setView("count");
-}
-
-/* ---------- Seite 2: Typen ---------- */
-function typeCellHTML(ref, sub){
-  if(!ref) return '<div class="tile emptycell"></div>';
-  if(ref.indexOf("t:")===0){
-    const t = findType(ref.slice(2));
-    if(!t) return '<div class="tile emptycell"></div>';
-    return `<button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
-      <span class="tcount">${typeSizeTotalInSub(sub, t.id, selSize)}</span>
-      <span class="tname">${esc(t.name)}</span>
-    </button>`;
-  }
-  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
-  return '<div class="tile emptycell"></div>';
-}
-function renderTypePage(){
-  const g = findSizeG(selSize);
-  if(!g){ setView("count"); return; }
-  const sub = curSub();
-  const fl = armedFlag ? findFlag(armedFlag) : null;
-  const rowsCSS = S.layoutTypes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
-  app.innerHTML = `
-    <div class="sizehead" style="${tileStyle(g.color, g.img)}">${esc(g.label)} – Typ wählen${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}</div>
-    <div class="grid" style="grid-template-rows:${rowsCSS}">
-      ${S.layoutTypes.map(r=>typeCellHTML(r.cells[0],sub)+typeCellHTML(r.cells[1],sub)).join("")}
-    </div>
-    <button class="backbtn" id="btnBack">✕ Abbrechen (zurück ohne Speichern)</button>`;
-  app.querySelectorAll(".tile[data-type]").forEach(btn=>{
-    btn.onclick = ()=>{
-      addCount(btn.dataset.type, selSize);
-      selSize = null;
-      setView("count");
-    };
-  });
-  app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
-    btn.onclick = ()=>{
-      const id = btn.dataset.flag;
-      armedFlag = (armedFlag===id) ? null : id;
-      render();
-    };
-  });
-  document.getElementById("btnBack").onclick = ()=>{ selSize=null; setView("count"); };
-}
-
-/* ================= ETIKETTIEREN ================= */
-function lastLabelText(sub){
-  const k = (sub.llog||[])[ (sub.llog||[]).length-1 ];
-  if(!k) return "Noch kein Etikett in diesem Bereich";
-  const p = k.split("|");
-  const t = findType(p[0]), s = findSizeG(p[1]), c = findCust(p[2]), fl = p[3]?findFlag(p[3]):null;
-  return "Zuletzt: <b>" + (s?esc(s.label):"?") + " · " + (t?esc(t.name):"?") + " → " + (c?esc(c.name):"?") + (fl?" · "+esc(fl.name):"") + "</b>";
-}
-/* Seite 1: Größen */
-function labelSizeCellHTML(ref, sub){
-  if(!ref) return '<div class="tile emptycell"></div>';
-  if(ref==="menu"){
-    const extras = S.sizes.filter(x=>x.extra);
-    return `<button class="tile menutile" data-menu="1">
-      <span class="tname" style="font-size:clamp(16px,4.8vw,22px);">📂 Mehr…</span>
-      <span class="tsub">${extras.length} weitere Größen</span>
-    </button>`;
-  }
-  if(ref.indexOf("s:")===0){
-    const g = findSizeG(ref.slice(2));
-    if(!g) return '<div class="tile emptycell"></div>';
-    return `<button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
-      <span class="tcount">${labelSizeTotalInSub(sub, g.id)}</span>
-      <span class="tname">${esc(g.label)}</span>
-    </button>`;
-  }
-  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
-  return '<div class="tile emptycell"></div>';
-}
-function renderLabelSizes(){
-  const f = curField(), sub = curSub();
-  const rowsCSS = S.layoutSizes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
-  app.innerHTML = `
-    <header>
-      <div class="ctx">
-        <select id="selField">${S.fields.map(x=>`<option value="${x.id}" ${x.id===f.id?"selected":""}>📍 ${esc(x.name)}</option>`).join("")}</select>
-        <select id="selSub">${f.subs.map(x=>`<option value="${x.id}" ${x.id===sub.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>
+    <div class="sizehead" style="background:var(--panel2);">📂 Weitere Kategorien</div>
+    <div class="page" style="padding:10px 12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${extras.map(c=>`
+          <button class="tile" data-cat="${c.id}" style="${tileStyle(c.color,c.img)};min-height:88px;">
+            <span class="tcount">${isLabel? labelCatTotalInSub(sub,c.id) : catTotalInSub(sub,c.id)}</span>
+            <span class="tname" style="font-size:17px;">${esc(c.label)}</span>
+          </button>`).join("")}
       </div>
-    </header>
-    <div class="undobar">
-      <div class="last">🏷️ ${lastLabelText(sub)} &nbsp;·&nbsp; Bereich: <b>${subLabelTotal(sub)}</b></div>
-      <button id="btnUndo" ${(sub.llog||[]).length? "":"disabled"}>↩︎ Rückgängig</button>
-    </div>
-    <div class="grid" style="grid-template-rows:${rowsCSS}">
-      ${S.layoutSizes.map(r=>labelSizeCellHTML(r.cells[0],sub)+labelSizeCellHTML(r.cells[1],sub)).join("")}
-    </div>`;
-  document.getElementById("selField").onchange = e=>{ S.activeField=e.target.value; ensureActiveSub(); armedFlag=null; save(); render(); };
-  document.getElementById("selSub").onchange   = e=>{ S.activeSub=e.target.value; armedFlag=null; save(); render(); };
-  document.getElementById("btnUndo").onclick   = undoLabel;
-  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
-    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("ltype"); };
-  });
-  app.querySelectorAll(".tile[data-menu]").forEach(btn=>{ btn.onclick = ()=>setView("lsizemenu"); });
-  app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
-    btn.onclick = ()=>{ const id=btn.dataset.flag; armedFlag = (armedFlag===id)?null:id; render(); };
-  });
-}
-function renderLabelSizeMenu(){
-  const sub = curSub();
-  const extras = S.sizes.filter(x=>x.extra);
-  app.innerHTML = `
-    <div class="sizehead" style="background:var(--panel2);">📂 Weitere Größen</div>
-    <div class="grid" style="grid-template-rows:repeat(${Math.max(1,Math.ceil(extras.length/2))},1fr)">
-      ${extras.map(g=>`
-        <button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
-          <span class="tcount">${labelSizeTotalInSub(sub, g.id)}</span>
-          <span class="tname">${esc(g.label)}</span>
-        </button>`).join("")}
-      ${extras.length%2 ? '<div class="tile emptycell"></div>' : ""}
+      ${extras.length? "" : '<div class="muted">Keine weiteren Kategorien. Unter ⚙️ Verwalten mit ⤵︎ hierher verschieben.</div>'}
     </div>
     <button class="backbtn" id="btnBack">← Zurück</button>`;
-  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
-    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("ltype"); };
-  });
-  document.getElementById("btnBack").onclick = ()=>setView("lcount");
+  wireCats(isLabel);
+  document.getElementById("btnBack").onclick = ()=>setView(isLabel?"lcount":"count");
 }
-/* Seite 2: Typen */
-function labelTypeCellHTML(ref, sub){
-  if(!ref) return '<div class="tile emptycell"></div>';
-  if(ref.indexOf("t:")===0){
-    const t = findType(ref.slice(2));
-    if(!t) return '<div class="tile emptycell"></div>';
-    return `<button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
-      <span class="tcount">${labelTypeSizeTotalInSub(sub, t.id, selSize)}</span>
-      <span class="tname">${esc(t.name)}</span>
-    </button>`;
-  }
-  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
-  return '<div class="tile emptycell"></div>';
-}
-function renderLabelTypes(){
-  const g = findSizeG(selSize);
-  if(!g){ setView("lcount"); return; }
-  const sub = curSub();
-  const fl = armedFlag ? findFlag(armedFlag) : null;
-  const rowsCSS = S.layoutTypes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
-  app.innerHTML = `
-    <div class="sizehead" style="${tileStyle(g.color, g.img)}">🏷️ ${esc(g.label)} – Qualität wählen${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}</div>
-    <div class="grid" style="grid-template-rows:${rowsCSS}">
-      ${S.layoutTypes.map(r=>labelTypeCellHTML(r.cells[0],sub)+labelTypeCellHTML(r.cells[1],sub)).join("")}
-    </div>
-    <button class="backbtn" id="btnBack">✕ Abbrechen</button>`;
-  app.querySelectorAll(".tile[data-type]").forEach(btn=>{
-    btn.onclick = ()=>{ selType = btn.dataset.type; setView("lcust"); };
+function wireCats(isLabel){
+  app.querySelectorAll(".tile[data-cat]").forEach(btn=>{
+    btn.onclick = ()=>{
+      if(isLabel){ selCat = btn.dataset.cat; setView("lcust"); }
+      else { addCount(btn.dataset.cat); render(); }
+    };
   });
+  app.querySelectorAll(".tile[data-menu]").forEach(btn=>{ btn.onclick = ()=>setView(isLabel?"lmenu":"cmenu"); });
   app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
-    btn.onclick = ()=>{ const id=btn.dataset.flag; armedFlag = (armedFlag===id)?null:id; render(); };
+    btn.onclick = ()=>{ const id=btn.dataset.flag; armedFlag=(armedFlag===id)?null:id; render(); };
   });
-  document.getElementById("btnBack").onclick = ()=>{ selSize=null; setView("lcount"); };
 }
-/* Seite 3: Kunde */
-function renderLabelCustomers(){
-  const g = findSizeG(selSize), t = findType(selType);
-  if(!g || !t){ setView("lcount"); return; }
+/* Kundenauswahl */
+function custRowHTML(c, cat, isGleich){
+  const p = custProgress(c.id, cat.id);
+  const done = p.target>0 && p.total>=p.target;
+  const fields = p.byField.length ? p.byField.map(x=>x.n+" "+esc(x.name)).join(" · ") : "noch keine auf einem Feld";
+  return `<button class="custbtn ${isGleich?"gleich":""} ${done?"done":""}" data-cust="${c.id}">
+    <span class="swatch" style="${swatchStyle(isGleich?(cat.color||c.color):c.color, isGleich?cat.img:c.img)}"></span>
+    <span style="flex:1;min-width:0;">
+      <span class="cname">${esc(c.name)}${isGleich?' <span class="badge">System</span>':""}</span>
+      <span class="cfields">${esc(fields)}</span>
+    </span>
+    <span style="flex:none;text-align:right;">
+      <span class="cnum" style="${isGleich?"":("color:"+(done?"var(--muted)":"var(--accent)"))}">${p.total}${p.target>0?"/"+p.target:""}</span>
+      <span class="crest">${p.target>0?(done?"erfüllt":"noch "+(p.target-p.total)):"ohne Bestellung"}</span>
+    </span>
+  </button>`;
+}
+function renderCustomers(){
+  const cat = findCat(selCat);
+  if(!cat){ setView("lcount"); return; }
   const fl = armedFlag ? findFlag(armedFlag) : null;
-
-  const rows = S.customers.map(c=>{
-    const p = custProgress(c.id, t.id, g.id);
-    return {c:c, p:p};
-  });
-  // Kunden mit Bestellung für diese Kombination zuerst, danach die übrigen
+  const gl = {id:GLEICH, name:S.gleich.name, color:S.gleich.color};
+  const rows = S.customers.map(c=>({c:c, p:custProgress(c.id, cat.id)}));
   rows.sort((a,b)=>{
-    const ao = a.p.target>0?0:1, bo = b.p.target>0?0:1;
+    const ao=a.p.target>0?0:1, bo=b.p.target>0?0:1;
     if(ao!==bo) return ao-bo;
-    if(ao===0){
-      const ar = a.p.target - a.p.total, br = b.p.target - b.p.total; // größter Restbedarf zuerst
-      if(ar!==br) return br-ar;
-    }
-    return S.customers.indexOf(a.c) - S.customers.indexOf(b.c);
+    if(ao===0){ const ar=a.p.target-a.p.total, br=b.p.target-b.p.total; if(ar!==br) return br-ar; }
+    return S.customers.indexOf(a.c)-S.customers.indexOf(b.c);
   });
-
   app.innerHTML = `
-    <div class="sizehead" style="${tileStyle(g.color, g.img)}">
-      🏷️ ${esc(g.label)} · ${esc(t.name)}${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}
-      <div style="font-size:13px;font-weight:600;opacity:.9;margin-top:4px;">Kunde / Etikett wählen</div>
+    <div class="sizehead" style="${tileStyle(cat.color, cat.img)}">
+      🏷️ ${esc(cat.label)}${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}
+      <div style="font-size:13px;font-weight:600;opacity:.9;margin-top:4px;">Etikett wählen</div>
     </div>
     <div class="page" style="padding:10px 12px;">
-      ${rows.map(r=>{
-        const p = r.p, done = p.target>0 && p.total>=p.target;
-        const fields = p.byField.length ? p.byField.map(x=>x.n+" "+esc(x.name)).join(" · ") : "noch keine auf einem Feld";
-        return `<button class="btn" data-cust="${r.c.id}" style="width:100%;text-align:left;margin-bottom:9px;padding:12px;display:flex;align-items:center;gap:11px;${done?"opacity:.62;":""}">
-          <span style="width:34px;height:34px;border-radius:8px;flex:none;background:${r.c.color};border:1px solid var(--line);"></span>
-          <span style="flex:1;min-width:0;">
-            <span style="display:block;font-size:17px;">${esc(r.c.name)}${r.c.own?' <span class="badge">eigenes</span>':""}</span>
-            <span style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;white-space:normal;">${esc(fields)}</span>
-          </span>
-          <span style="flex:none;text-align:right;font-variant-numeric:tabular-nums;">
-            <span style="display:block;font-size:17px;color:${done?"var(--muted)":"var(--accent)"};">${p.total}${p.target>0?"/"+p.target:""}</span>
-            ${p.target>0?`<span style="display:block;font-size:11px;font-weight:600;color:var(--muted);">${done?"erfüllt":"noch "+(p.target-p.total)}</span>`:`<span style="display:block;font-size:11px;font-weight:600;color:var(--muted);">ohne Bestellung</span>`}
-          </span>
-        </button>`;
-      }).join("")}
-      ${S.customers.length? "" : '<div class="muted">Noch keine Kunden angelegt – unter ⚙️ Verwalten → 👥 Kunden hinzufügen.</div>'}
+      ${custRowHTML(gl, cat, true)}
+      ${rows.map(r=>custRowHTML(r.c, cat, false)).join("")}
+      ${S.customers.length? "" : '<div class="muted">Noch keine Kunden angelegt – unter ⚙️ Verwalten → 👥 Kunden.</div>'}
     </div>
-    <button class="backbtn" id="btnBack">← Zurück zur Qualität</button>`;
-
+    <button class="backbtn" id="btnBack">← Zurück</button>`;
   app.querySelectorAll("[data-cust]").forEach(btn=>{
-    btn.onclick = ()=>{
-      addLabel(selType, selSize, btn.dataset.cust);
-      selSize=null; selType=null;
-      setView("lcount");
-    };
+    btn.onclick = ()=>{ addLabel(selCat, btn.dataset.cust); selCat=null; setView("lcount"); };
   });
-  document.getElementById("btnBack").onclick = ()=>{ selType=null; setView("ltype"); };
+  document.getElementById("btnBack").onclick = ()=>{ selCat=null; setView("lcount"); };
 }
 
 /* ---------- Bericht ---------- */
-function allLabelRows(labels){
-  const rows = [];
-  for(const k in (labels||{})){
-    const n = labels[k]; if(!(n>0)) continue;
-    const p = k.split("|");
-    const t = findType(p[0]), s = findSizeG(p[1]), c = findCust(p[2]);
-    if(!t || !s) continue;
-    rows.push({t, s, c:c||{name:"(gelöscht)",color:"#666"}, cid:p[2], fid:p[3]||"", n, k});
-  }
-  rows.sort((a,b)=>
-    (S.sizes.indexOf(a.s)-S.sizes.indexOf(b.s)) ||
-    (S.types.indexOf(a.t)-S.types.indexOf(b.t)) ||
-    String(a.c.name).localeCompare(String(b.c.name))
-  );
-  return rows;
-}
-function allCountRows(counts){
-  const rows = [];
+function flagName(fid){ if(!fid) return ""; const f=findFlag(fid); return f?f.name:"(gelöscht)"; }
+function countRows(counts){
+  const rows=[];
   for(const k in counts){
-    const n = counts[k]; if(!(n>0)) continue;
-    const p = k.split("|");
-    const t = findType(p[0]); if(!t) continue;
-    const s = findSizeG(p[1]); if(!s) continue;
-    rows.push({t, s, fid:p[2]||"", n, k});
+    const n=counts[k]; if(!(n>0)) continue;
+    const p=k.split("|"); const c=findCat(p[0]); if(!c) continue;
+    rows.push({c:c, fid:p[1]||"", n:n, k:k});
   }
-  const fi = r=>{ if(!r.fid) return -1; const i=S.flags.findIndex(f=>f.id===r.fid); return i<0?99:i; };
-  rows.sort((a,b)=>
-    (S.sizes.indexOf(a.s)-S.sizes.indexOf(b.s)) ||
-    (S.types.indexOf(a.t)-S.types.indexOf(b.t)) ||
-    (fi(a)-fi(b))
-  );
+  rows.sort((a,b)=>(S.cats.indexOf(a.c)-S.cats.indexOf(b.c)));
   return rows;
 }
-function flagName(fid){ if(!fid) return ""; const f=findFlag(fid); return f?f.name:"(Merkmal gelöscht)"; }
+function labelRows(labels){
+  const rows=[];
+  for(const k in (labels||{})){
+    const n=labels[k]; if(!(n>0)) continue;
+    const p=k.split("|"); const c=findCat(p[0]); if(!c) continue;
+    const cu=findCust(p[1]) || {id:p[1], name:"(gelöscht)", color:"#666"};
+    rows.push({c:c, cu:cu, fid:p[2]||"", n:n, k:k});
+  }
+  rows.sort((a,b)=>(S.cats.indexOf(a.c)-S.cats.indexOf(b.c)) || String(a.cu.name).localeCompare(String(b.cu.name)));
+  return rows;
+}
 function renderReport(){
   if(!reportFieldId || !S.fields.find(f=>f.id===reportFieldId)) reportFieldId = S.activeField;
   const f = S.fields.find(f=>f.id===reportFieldId);
-  const fieldAgg = {};
-  f.subs.forEach(sub=>{ for(const k in sub.counts) fieldAgg[k]=(fieldAgg[k]||0)+sub.counts[k]; });
-  const fieldTotal = Object.values(fieldAgg).reduce((a,b)=>a+b,0);
+  const agg={}; f.subs.forEach(sub=>{ for(const k in sub.counts) agg[k]=(agg[k]||0)+sub.counts[k]; });
+  const tot = Object.values(agg).reduce((a,b)=>a+b,0);
 
-  let html = `
-    <div class="page">
-      <div class="row">
-        <select id="repField" class="grow" style="background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;font-size:16px;font-weight:600;padding:10px;">
-          ${S.fields.map(x=>`<option value="${x.id}" ${x.id===f.id?"selected":""}>📍 ${esc(x.name)}</option>`).join("")}
-        </select>
-      </div>
-      <div class="card">
-        <h2 style="margin-top:0;">Gesamt: ${esc(f.name)} — <span style="color:var(--accent)">${fieldTotal} Bäume</span></h2>
-        ${fieldTotal? tableHTML(fieldAgg) : '<div class="muted">Noch keine Zählungen auf diesem Feld.</div>'}
-      </div>`;
+  let html = `<div class="page">
+    <div class="row">
+      <select id="repField" class="grow" style="background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;font-size:16px;font-weight:600;padding:10px;">
+        ${S.fields.map(x=>`<option value="${x.id}" ${x.id===f.id?"selected":""}>📍 ${esc(x.name)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0;">🏷️ Etiketten je Kunde <span class="muted" style="font-weight:400;">(alle Felder)</span></h2>
+      ${customerReportHTML()}
+    </div>
+    <button class="btn primary wide" id="btnCsvLab">⬇️ Excel-Export Etiketten</button>
+
+    <div class="card" style="margin-top:16px;">
+      <h2 style="margin-top:0;">🌲 Zählung ${esc(f.name)} — <span style="color:var(--accent)">${tot}</span></h2>
+      ${tot? `<table><tr><th>Kategorie</th><th>Merkmal</th><th style="text-align:right">Anzahl</th></tr>
+        ${countRows(agg).map(r=>`<tr><td><span class="dot" style="background:${r.c.color||"#666"}"></span>${esc(r.c.label)}</td>
+        <td>${r.fid?esc(flagName(r.fid)):""}</td><td class="num">${r.n}</td></tr>`).join("")}</table>`
+        : '<div class="muted">Keine Zählungen auf diesem Feld.</div>'}
+    </div>`;
 
   f.subs.forEach(sub=>{
-    const rows = allCountRows(sub.counts);
+    const lr = labelRows(sub.labels), cr = countRows(sub.counts);
+    if(!lr.length && !cr.length) return;
     html += `<div class="card">
-      <h2 style="margin-top:0;">${esc(sub.name)} — ${subTotal(sub)} Bäume</h2>
-      ${rows.length? `<table><tr><th>Größe</th><th>Qualität</th><th>Merkmal</th><th style="text-align:right">Anzahl</th><th></th></tr>
-        ${rows.map(r=>`<tr>
-          <td>${esc(r.s.label)}</td>
-          <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
-          <td>${r.fid?`<span class="fbadge" style="background:${(findFlag(r.fid)||{}).color||'#666'}">${esc(flagName(r.fid))}</span>`:""}</td>
-          <td class="num">${r.n}</td>
-          <td style="text-align:right"><span class="corr">
-            <button data-sub="${sub.id}" data-k="${r.k}" data-d="-1">−</button>
-            <button data-sub="${sub.id}" data-k="${r.k}" data-d="1">+</button>
-          </span></td>
-        </tr>`).join("")}</table>`
-      : '<div class="muted">Keine Einträge.</div>'}
+      <h2 style="margin-top:0;">${esc(sub.name)}</h2>
+      ${lr.length? `<div class="muted" style="margin-bottom:4px;">Etiketten (${subLabelTotal(sub)})</div>
+      <table><tr><th>Kategorie</th><th>Etikett</th><th style="text-align:right">Anz.</th><th></th></tr>
+      ${lr.map(r=>`<tr><td>${esc(r.c.label)}</td><td>${esc(r.cu.name)}${r.fid?' <span class="badge">'+esc(flagName(r.fid))+'</span>':""}</td>
+        <td class="num">${r.n}</td><td style="text-align:right"><span class="corr">
+        <button data-sub="${sub.id}" data-k="${r.k}" data-d="-1" data-l="1">−</button>
+        <button data-sub="${sub.id}" data-k="${r.k}" data-d="1" data-l="1">+</button></span></td></tr>`).join("")}</table>`:""}
+      ${cr.length? `<div class="muted" style="margin:10px 0 4px;">Zählung (${subTotal(sub)})</div>
+      <table><tr><th>Kategorie</th><th>Merkmal</th><th style="text-align:right">Anz.</th><th></th></tr>
+      ${cr.map(r=>`<tr><td>${esc(r.c.label)}</td><td>${r.fid?esc(flagName(r.fid)):""}</td>
+        <td class="num">${r.n}</td><td style="text-align:right"><span class="corr">
+        <button data-sub="${sub.id}" data-k="${r.k}" data-d="-1">−</button>
+        <button data-sub="${sub.id}" data-k="${r.k}" data-d="1">+</button></span></td></tr>`).join("")}</table>`:""}
     </div>`;
   });
 
-  html += `
-      <button class="btn primary wide" id="btnCsvField">⬇️ Excel-Export Zählung: nur „${esc(f.name)}“</button>
-      <button class="btn wide" id="btnCsvAll">⬇️ Excel-Export Zählung: alle Felder</button>
-      <p class="muted">CSV-Spalten: Feld; Unterbereich; Größe; Qualität; Merkmal; Anzahl. Merkmal ist leer bei normalen Zählungen.</p>
-
-      <div class="card" style="margin-top:16px;">
-        <h2 style="margin-top:0;">🏷️ Etiketten je Kunde <span class="muted" style="font-weight:400;">(alle Felder)</span></h2>
-        ${customerReportHTML()}
-      </div>
-      <button class="btn primary wide" id="btnCsvLab">⬇️ Excel-Export Etiketten (alle Felder)</button>
-      <p class="muted">CSV-Spalten: Kunde; Größe; Qualität; Feld; Unterbereich; Merkmal; Anzahl; Bestellt.</p>
-    </div>`;
+  html += `<button class="btn wide" id="btnCsvField">⬇️ Excel-Export Zählung: „${esc(f.name)}“</button>
+    <button class="btn wide" id="btnCsvAll">⬇️ Excel-Export Zählung: alle Felder</button>
+    <p class="muted">Etiketten-CSV: Etikett; Kategorie; Feld; Unterbereich; Merkmal; Anzahl; Bestellt.<br>Zählungs-CSV: Feld; Unterbereich; Kategorie; Merkmal; Anzahl.</p>
+  </div>`;
   app.innerHTML = html;
-  const bl = document.getElementById("btnCsvLab");
-  if(bl) bl.onclick = ()=>exportLabelCSV();
 
   document.getElementById("repField").onchange = e=>{ reportFieldId=e.target.value; render(); };
   app.querySelectorAll(".corr button").forEach(b=>{
     b.onclick = ()=>{
       const sub = f.subs.find(s=>s.id===b.dataset.sub);
-      adjust(sub, b.dataset.k, +b.dataset.d);
+      adjust(sub, b.dataset.k, +b.dataset.d, b.dataset.l==="1");
     };
   });
   document.getElementById("btnCsvField").onclick = ()=>exportCSV([f]);
   document.getElementById("btnCsvAll").onclick   = ()=>exportCSV(S.fields);
-}
-function tableHTML(agg){
-  const rows = allCountRows(agg);
-  return `<table><tr><th>Größe</th><th>Qualität</th><th>Merkmal</th><th style="text-align:right">Anzahl</th></tr>
-    ${rows.map(r=>`<tr>
-      <td>${esc(r.s.label)}</td>
-      <td><span class="dot" style="background:${r.t.color}"></span>${esc(r.t.name)}</td>
-      <td>${r.fid?`<span class="fbadge" style="background:${(findFlag(r.fid)||{}).color||'#666'}">${esc(flagName(r.fid))}</span>`:""}</td>
-      <td class="num">${r.n}</td>
-    </tr>`).join("")}</table>`;
+  document.getElementById("btnCsvLab").onclick   = ()=>exportLabelCSV();
 }
 function customerReportHTML(){
-  let html = "";
-  let any = false;
-  S.customers.forEach(c=>{
-    // alle Kombinationen sammeln: aus Bestellungen und aus vergebenen Etiketten
-    const combos = {};
-    for(const ok in S.orders){
-      const p = ok.split("|");
-      if(p[0]===c.id && S.orders[ok]>0) combos[p[1]+"|"+p[2]] = true;
-    }
+  let html=""; let any=false;
+  const all = [{id:GLEICH, name:S.gleich.name, color:S.gleich.color}].concat(S.customers);
+  all.forEach(c=>{
+    const combos={};
+    for(const ok in S.orders){ const p=ok.split("|"); if(p[0]===c.id && S.orders[ok]>0) combos[p[1]]=true; }
     S.fields.forEach(f=>f.subs.forEach(sub=>{
-      for(const k in (sub.labels||{})){
-        const p = k.split("|");
-        if(p[2]===c.id) combos[p[0]+"|"+p[1]] = true;
-      }
+      for(const k in (sub.labels||{})){ const p=k.split("|"); if(p[1]===c.id) combos[p[0]]=true; }
     }));
     const list = Object.keys(combos);
     const grand = custGrandTotal(c.id);
     if(!list.length && !grand) return;
-    any = true;
+    any=true;
     html += `<div style="margin-bottom:14px;">
       <div class="row" style="margin-bottom:6px;">
         <span style="width:16px;height:16px;border-radius:4px;flex:none;background:${c.color};border:1px solid var(--line);"></span>
         <b class="grow" style="font-size:16px;">${esc(c.name)}</b>
         <span class="muted">${grand} Etiketten</span>
       </div>
-      <table><tr><th>Größe</th><th>Qualität</th><th style="text-align:right">Vergeben</th><th style="text-align:right">Bestellt</th><th>Felder</th></tr>`;
-    list.sort((a,b)=>{
-      const [ta,sa]=a.split("|"), [tb,sb]=b.split("|");
-      return (S.sizes.findIndex(x=>x.id===sa)-S.sizes.findIndex(x=>x.id===sb)) ||
-             (S.types.findIndex(x=>x.id===ta)-S.types.findIndex(x=>x.id===tb));
-    }).forEach(key=>{
-      const [tid,sid] = key.split("|");
-      const t = findType(tid), s = findSizeG(sid);
-      if(!t || !s) return;
-      const p = custProgress(c.id, tid, sid);
+      <table><tr><th>Kategorie</th><th style="text-align:right">Verg.</th><th style="text-align:right">Best.</th><th>Felder</th></tr>`;
+    list.sort((a,b)=>S.cats.findIndex(x=>x.id===a)-S.cats.findIndex(x=>x.id===b)).forEach(catId=>{
+      const cc = findCat(catId); if(!cc) return;
+      const p = custProgress(c.id, catId);
       const done = p.target>0 && p.total>=p.target;
-      html += `<tr>
-        <td>${esc(s.label)}</td>
-        <td><span class="dot" style="background:${t.color}"></span>${esc(t.name)}</td>
+      html += `<tr><td><span class="dot" style="background:${cc.color||"#666"}"></span>${esc(cc.label)}</td>
         <td class="num" style="color:${done?"var(--muted)":"var(--accent)"}">${p.total}</td>
         <td class="num">${p.target||"–"}</td>
-        <td style="font-size:12px;color:var(--muted);">${p.byField.map(x=>x.n+" "+esc(x.name)).join("<br>")}</td>
-      </tr>`;
+        <td style="font-size:12px;color:var(--muted);">${p.byField.map(x=>x.n+" "+esc(x.name)).join("<br>")}</td></tr>`;
     });
     html += `</table></div>`;
   });
   return any ? html : '<div class="muted">Noch keine Etiketten vergeben und keine Bestellungen hinterlegt.</div>';
 }
-function exportLabelCSV(){
-  let csv = "\uFEFFKunde;Größe;Qualität;Feld;Unterbereich;Merkmal;Anzahl;Bestellt\r\n";
-  S.customers.forEach(c=>{
-    S.fields.forEach(f=>{
-      f.subs.forEach(sub=>{
-        allLabelRows(sub.labels).filter(r=>r.cid===c.id).forEach(r=>{
-          csv += [c.name, r.s.label, r.t.name, f.name, sub.name, flagName(r.fid), r.n, orderQty(c.id, r.t.id, r.s.id)||""]
-            .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
-        });
-      });
-    });
-  });
-  const date = new Date().toISOString().slice(0,10);
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = "Etiketten_"+date+".csv";
-  document.body.appendChild(a); a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-}
-function exportCSV(fields){
-  let csv = "\uFEFFFeld;Unterbereich;Größe;Qualität;Merkmal;Anzahl\r\n";
-  fields.forEach(f=>{
-    f.subs.forEach(sub=>{
-      allCountRows(sub.counts).forEach(r=>{
-        csv += [f.name, sub.name, r.s.label, r.t.name, flagName(r.fid), r.n]
-          .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
-      });
-    });
-  });
-  const date = new Date().toISOString().slice(0,10);
-  const name = (fields.length===1 ? "Zaehlung_"+fields[0].name.replace(/[^\wäöüÄÖÜß-]+/g,"_") : "Zaehlung_alle_Felder") + "_" + date + ".csv";
+function dl(csv, name){
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
+function exportLabelCSV(){
+  let csv = "\uFEFFEtikett;Kategorie;Feld;Unterbereich;Merkmal;Anzahl;Bestellt\r\n";
+  const all = [{id:GLEICH, name:S.gleich.name}].concat(S.customers);
+  all.forEach(c=>{
+    S.fields.forEach(f=>f.subs.forEach(sub=>{
+      labelRows(sub.labels).filter(r=>r.cu.id===c.id).forEach(r=>{
+        csv += [c.name, r.c.label, f.name, sub.name, flagName(r.fid), r.n, orderQty(c.id, r.c.id)||""]
+          .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
+      });
+    }));
+  });
+  dl(csv, "Etiketten_"+new Date().toISOString().slice(0,10)+".csv");
+}
+function exportCSV(fields){
+  let csv = "\uFEFFFeld;Unterbereich;Kategorie;Merkmal;Anzahl\r\n";
+  fields.forEach(f=>f.subs.forEach(sub=>{
+    countRows(sub.counts).forEach(r=>{
+      csv += [f.name, sub.name, r.c.label, flagName(r.fid), r.n]
+        .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
+    });
+  }));
+  const nm = (fields.length===1 ? "Zaehlung_"+fields[0].name.replace(/[^\wäöüÄÖÜß-]+/g,"_") : "Zaehlung_alle_Felder");
+  dl(csv, nm+"_"+new Date().toISOString().slice(0,10)+".csv");
+}
 
 /* ---------- Verwalten ---------- */
-function cellOptionsSizes(sel){
+function cellOptions(sel){
   let html = `<option value="" ${!sel?"selected":""}>— leer —</option>`;
   html += `<option value="menu" ${sel==="menu"?"selected":""}>📂 Mehr-Menü</option>`;
-  S.sizes.forEach(g=>{ html += `<option value="s:${g.id}" ${sel==="s:"+g.id?"selected":""}>${esc(g.label)}</option>`; });
+  S.cats.forEach(c=>{ html += `<option value="c:${c.id}" ${sel==="c:"+c.id?"selected":""}>${esc(c.label)}</option>`; });
   S.flags.forEach(fl=>{ html += `<option value="f:${fl.id}" ${sel==="f:"+fl.id?"selected":""}>🏳️ ${esc(fl.name)}</option>`; });
-  return html;
-}
-function cellOptionsTypes(sel){
-  let html = `<option value="" ${!sel?"selected":""}>— leer —</option>`;
-  S.types.forEach(t=>{ html += `<option value="t:${t.id}" ${sel==="t:"+t.id?"selected":""}>${esc(t.name)}</option>`; });
-  S.flags.forEach(fl=>{ html += `<option value="f:${fl.id}" ${sel==="f:"+fl.id?"selected":""}>🏳️ ${esc(fl.name)}</option>`; });
-  return html;
-}
-function layoutEditorHTML(which, layout, optsFn){
-  let html = "";
-  layout.forEach((r,i)=>{
-    html += `<div class="row">
-      <select class="mini grow" data-lay="cell" data-w="${which}" data-i="${i}" data-c="0">${optsFn(r.cells[0])}</select>
-      <select class="mini grow" data-lay="cell" data-w="${which}" data-i="${i}" data-c="1">${optsFn(r.cells[1])}</select>
-      <button class="btn tiny" data-lay="h" data-w="${which}" data-i="${i}">${r.h==="half"?"½":"1"}</button>
-      <button class="btn tiny" data-lay="up" data-w="${which}" data-i="${i}" ${i===0?"disabled":""}>↑</button>
-      <button class="btn tiny" data-lay="dn" data-w="${which}" data-i="${i}" ${i===layout.length-1?"disabled":""}>↓</button>
-      <button class="btn tiny danger" data-lay="del" data-w="${which}" data-i="${i}">🗑</button>
-    </div>`;
-  });
-  html += `<button class="btn small" data-lay="add" data-w="${which}">＋ Zeile</button>`;
   return html;
 }
 function renderSettings(){
   let html = `<div class="page">
     <div class="card">
-      <h2 style="margin-top:0;">📐 Seite 1: Größen anordnen</h2>
-      <p class="muted">Erste Zählseite (Größen-Auswahl). Höhe: <b>1</b> = große Kachel, <b>½</b> = halbe Höhe. „📂 Mehr-Menü“ öffnet das Untermenü mit allen Größen, die als „Mehr“ markiert sind.</p>
-      ${layoutEditorHTML("S", S.layoutSizes, cellOptionsSizes)}
-    </div>
-
-    <div class="card">
-      <h2 style="margin-top:0;">📐 Seite 2: Typen anordnen</h2>
-      <p class="muted">Zweite Zählseite (Typ-Auswahl nach der Größe).</p>
-      ${layoutEditorHTML("T", S.layoutTypes, cellOptionsTypes)}
-    </div>
-
-    <div class="card">
-      <h2 style="margin-top:0;">📏 Größen</h2>
-      <p class="muted">Zentral definierte Größen – einmal anlegen, überall verwenden. ⤵︎ = ins 📂 Mehr-Menü verschieben, ⤴︎ = zurückholen. ↕ = Reihenfolge (gilt für Bericht und Mehr-Menü).</p>`;
-  S.sizes.forEach((g,gi)=>{
+      <h2 style="margin-top:0;">📐 Zählseite anordnen</h2>
+      <p class="muted">Zwei Plätze je Zeile. Höhe: <b>1</b> = große Kachel, <b>½</b> = halbe Höhe. Gilt für Etikettieren und Zählen.</p>`;
+  S.layout.forEach((r,i)=>{
     html += `<div class="row">
-      ${g.img? `<span class="thumb" style="background-image:url('${g.img}')"></span>` : `<input type="color" value="${g.color||"#3a524a"}" data-act="colG" data-g="${g.id}">`}
-      <span class="grow" style="font-size:14px;">${esc(g.label)}${g.extra?'<span class="badge">📂 Mehr</span>':""}</span>
-      <button class="btn tiny" data-act="imgG" data-g="${g.id}">📷</button>
-      <button class="btn tiny" data-act="movG" data-g="${g.id}">↕</button>
-      <button class="btn tiny" data-act="extraG" data-g="${g.id}">${g.extra?"⤴︎":"⤵︎"}</button>
-      <button class="btn tiny" data-act="renG" data-g="${g.id}">✏️</button>
-      <button class="btn tiny danger" data-act="delG" data-g="${g.id}">🗑</button>
+      <select class="mini grow" data-lay="cell" data-i="${i}" data-c="0">${cellOptions(r.cells[0])}</select>
+      <select class="mini grow" data-lay="cell" data-i="${i}" data-c="1">${cellOptions(r.cells[1])}</select>
+      <button class="btn tiny" data-lay="h" data-i="${i}">${r.h==="half"?"½":"1"}</button>
+      <button class="btn tiny" data-lay="up" data-i="${i}" ${i===0?"disabled":""}>↑</button>
+      <button class="btn tiny" data-lay="dn" data-i="${i}" ${i===S.layout.length-1?"disabled":""}>↓</button>
+      <button class="btn tiny danger" data-lay="del" data-i="${i}">🗑</button>
     </div>`;
   });
-  html += `<button class="btn small" data-act="addG">＋ Größe</button>
+  html += `<button class="btn small" data-lay="add">＋ Zeile</button>
     </div>
 
     <div class="card">
-      <h2 style="margin-top:0;">🌲 Typen</h2>
-      <p class="muted">Zentral definierte Typen/Qualitäten. Nach dem Anlegen über „Seite 2: Typen anordnen“ platzieren.</p>`;
-  S.types.forEach(t=>{
+      <h2 style="margin-top:0;">🌲 Kategorien <span class="muted" style="font-weight:400;">(Typ + Größe)</span></h2>
+      <p class="muted">Einmal definiert, dann nur noch verschieben. ⤵︎ = ins 📂 Mehr-Menü, ⤴︎ = zurück auf die Hauptseite. ↕ = Reihenfolge.</p>`;
+  S.cats.forEach(c=>{
     html += `<div class="row">
-      ${t.img? `<span class="thumb" style="background-image:url('${t.img}')"></span>` : `<input type="color" value="${t.color}" data-act="colT" data-t="${t.id}">`}
-      <b class="grow" style="font-size:15px;">${esc(t.name)}</b>
-      <button class="btn tiny" data-act="imgT" data-t="${t.id}">📷</button>
-      <button class="btn tiny" data-act="movT" data-t="${t.id}">↕</button>
-      <button class="btn tiny" data-act="renT" data-t="${t.id}">✏️</button>
-      <button class="btn tiny danger" data-act="delT" data-t="${t.id}">🗑</button>
+      ${c.img? `<span class="thumb" style="background-image:url('${c.img}')"></span>` : `<input type="color" value="${c.color||"#3a524a"}" data-act="colK" data-k="${c.id}">`}
+      <span class="grow" style="font-size:14px;">${esc(c.label)}${c.extra?'<span class="badge">📂</span>':""}</span>
+      <button class="btn tiny" data-act="imgK" data-k="${c.id}">📷</button>
+      <button class="btn tiny" data-act="movK" data-k="${c.id}">↕</button>
+      <button class="btn tiny" data-act="extK" data-k="${c.id}">${c.extra?"⤴︎":"⤵︎"}</button>
+      <button class="btn tiny" data-act="renK" data-k="${c.id}">✏️</button>
+      <button class="btn tiny danger" data-act="delK" data-k="${c.id}">🗑</button>
     </div>`;
   });
-  html += `<button class="btn small" data-act="addT">＋ Typ</button>
+  html += `<button class="btn small" data-act="addK">＋ Kategorie</button>
     </div>
 
     <div class="card">
-      <h2 style="margin-top:0;">🏳️ Merkmale (Flags)</h2>
-      <p class="muted">Merkmal antippen → die nächste Zählung wird damit markiert. Im Bericht/Export eigene Spalte; leer = normale Zählung. Über die Anordnungs-Editoren auf Seite 1 oder Seite 2 platzierbar.</p>`;
+      <h2 style="margin-top:0;">👥 Kunden & Bestellungen <span class="muted" style="font-weight:400;">(${S.customers.length}/20)</span></h2>
+      <p class="muted">Bestellung = Stückzahl je Kategorie; erscheint beim Etikettieren als (vergeben/bestellt).</p>
+      <div class="row" style="border:1px solid var(--line);border-radius:10px;padding:8px;">
+        <input type="color" value="${S.gleich.color}" data-act="colGl">
+        <b class="grow" style="font-size:15px;">${esc(S.gleich.name)}<span class="badge">System</span></b>
+        <button class="btn tiny" data-act="renGl">✏️</button>
+      </div>`;
+  S.customers.forEach(c=>{
+    html += `<div style="border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:10px;">
+      <div class="row">
+        <input type="color" value="${c.color}" data-act="colC" data-c="${c.id}">
+        <b class="grow" style="font-size:16px;">${esc(c.name)}</b>
+        <button class="btn tiny" data-act="movC" data-c="${c.id}">↕</button>
+        <button class="btn tiny" data-act="renC" data-c="${c.id}">✏️</button>
+        <button class="btn tiny danger" data-act="delC" data-c="${c.id}">🗑</button>
+      </div>`;
+    const oks = Object.keys(S.orders).filter(k=>k.split("|")[0]===c.id && S.orders[k]>0);
+    oks.sort((a,b)=>S.cats.findIndex(x=>x.id===a.split("|")[1])-S.cats.findIndex(x=>x.id===b.split("|")[1]));
+    oks.forEach(k=>{
+      const cc = findCat(k.split("|")[1]); if(!cc) return;
+      html += `<div class="row" style="padding-left:8px;">
+        <span class="grow" style="font-size:13px;">${esc(cc.label)}<span class="badge">${custProgress(c.id,cc.id).total}/${S.orders[k]}</span></span>
+        <button class="btn tiny" data-act="qtyO" data-o="${k}">✏️</button>
+        <button class="btn tiny danger" data-act="delO" data-o="${k}">🗑</button>
+      </div>`;
+    });
+    html += `<button class="btn tiny" style="font-size:13px;" data-act="addO" data-c="${c.id}">＋ Bestellung</button>
+    </div>`;
+  });
+  html += `<button class="btn small" data-act="addC">＋ Kunde</button>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">🏳️ Merkmale</h2>
+      <p class="muted">Antippen → der nächste Baum wird damit markiert. Eigene Spalte im Bericht/Export.</p>`;
   S.flags.forEach(fl=>{
     html += `<div class="row">
       <input type="color" value="${fl.color}" data-act="colFl" data-fl="${fl.id}">
@@ -1148,41 +922,6 @@ function renderSettings(){
     </div>`;
   });
   html += `<button class="btn small" data-act="addFl">＋ Merkmal</button>
-  </div>
-
-    <div class="card">
-      <h2 style="margin-top:0;">👥 Kunden & Bestellungen</h2>
-      <p class="muted">Jeder Kunde hat eine Etikettfarbe. Bestellungen: pro Größe + Qualität die bestellte Stückzahl – sie erscheint beim Etikettieren als (vergeben/bestellt).</p>`;
-  S.customers.forEach(c=>{
-    html += `<div style="border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:10px;">
-      <div class="row">
-        <input type="color" value="${c.color}" data-act="colC" data-c="${c.id}">
-        <b class="grow" style="font-size:16px;">${esc(c.name)}${c.own?'<span class="badge">eigenes</span>':""}</b>
-        <button class="btn tiny" data-act="movC" data-c="${c.id}">↕</button>
-        <button class="btn tiny" data-act="renC" data-c="${c.id}">✏️</button>
-        <button class="btn tiny danger" data-act="delC" data-c="${c.id}">🗑</button>
-      </div>`;
-    const oks = Object.keys(S.orders).filter(k=>k.split("|")[0]===c.id && S.orders[k]>0);
-    oks.sort((a,b)=>{
-      const pa=a.split("|"), pb=b.split("|");
-      return (S.sizes.findIndex(x=>x.id===pa[2])-S.sizes.findIndex(x=>x.id===pb[2])) ||
-             (S.types.findIndex(x=>x.id===pa[1])-S.types.findIndex(x=>x.id===pb[1]));
-    });
-    oks.forEach(k=>{
-      const p = k.split("|"), t = findType(p[1]), g = findSizeG(p[2]);
-      if(!t || !g) return;
-      const done = custProgress(c.id, t.id, g.id).total;
-      html += `<div class="row" style="padding-left:8px;">
-        <span class="grow" style="font-size:13px;">${esc(g.label)} · ${esc(t.name)}
-          <span class="badge">${done}/${S.orders[k]}</span></span>
-        <button class="btn tiny" data-act="qtyO" data-o="${k}">✏️</button>
-        <button class="btn tiny danger" data-act="delO" data-o="${k}">🗑</button>
-      </div>`;
-    });
-    html += `<button class="btn tiny" style="font-size:13px;" data-act="addO" data-c="${c.id}">＋ Bestellung</button>
-    </div>`;
-  });
-  html += `<button class="btn small" data-act="addC">＋ Kunde</button>
     </div>
 
     <div class="card">
@@ -1196,7 +935,7 @@ function renderSettings(){
       </div>`;
     f.subs.forEach(sub=>{
       html += `<div class="row" style="padding-left:14px;">
-        <span class="grow">└ ${esc(sub.name)} <span class="muted">(${subTotal(sub)})</span></span>
+        <span class="grow">└ ${esc(sub.name)} <span class="muted">(🏷️${subLabelTotal(sub)} · 🌲${subTotal(sub)})</span></span>
         <button class="btn small" data-act="renS" data-f="${f.id}" data-s="${sub.id}">✏️</button>
         <button class="btn small danger" data-act="delS" data-f="${f.id}" data-s="${sub.id}">🗑</button>
       </div>`;
@@ -1208,27 +947,22 @@ function renderSettings(){
 
     <div class="card">
       <h2 style="margin-top:0;">🛟 Datensicherung</h2>
-      <p class="muted">Alle Daten liegen lokal auf diesem Handy. Vor dem Löschen von Browser-/Websitedaten: erst CSV exportieren oder Sicherung erstellen.</p>
+      <p class="muted">Alle Daten liegen lokal auf diesem Handy.</p>
       <button class="btn wide" id="btnBackup">⬇️ Sicherungsdatei erstellen</button>
       <button class="btn wide" id="btnRestore">⬆️ Sicherung wiederherstellen</button>
       <input type="file" id="fileRestore" accept=".json,application/json" class="hidden">
-      <button class="btn wide danger" id="btnReset">Alle Zählungen löschen…</button>
+      <button class="btn wide danger" id="btnReset">Daten löschen…</button>
     </div>
   </div>`;
   app.innerHTML = html;
 
-  /* Layout-Editoren */
+  /* Layout */
   app.querySelectorAll("[data-lay]").forEach(el=>{
-    const which = el.dataset.w;
-    const lay = ()=> which==="S" ? S.layoutSizes : S.layoutTypes;
     const kind = el.dataset.lay;
-    if(kind==="cell"){
-      el.onchange = ()=>{ lay()[+el.dataset.i].cells[+el.dataset.c] = el.value || null; save(); };
-      return;
-    }
+    if(kind==="cell"){ el.onchange = ()=>{ S.layout[+el.dataset.i].cells[+el.dataset.c] = el.value||null; save(); }; return; }
     el.onclick = ()=>{
-      const L = lay(); const i = +el.dataset.i;
-      if(kind==="h"){ L[i].h = (L[i].h==="half" ? "full" : "half"); }
+      const i = +el.dataset.i, L = S.layout;
+      if(kind==="h"){ L[i].h = L[i].h==="half"?"full":"half"; }
       if(kind==="up" && i>0){ const x=L[i]; L[i]=L[i-1]; L[i-1]=x; }
       if(kind==="dn" && i<L.length-1){ const x=L[i]; L[i]=L[i+1]; L[i+1]=x; }
       if(kind==="del"){ if(L.length<=1) return; L.splice(i,1); }
@@ -1240,55 +974,88 @@ function renderSettings(){
   /* Aktionen */
   app.querySelectorAll("[data-act]").forEach(el=>{
     const act = el.dataset.act;
-    const getF  = ()=>S.fields.find(x=>x.id===el.dataset.f);
-    const getT  = ()=>findType(el.dataset.t);
-    const getG  = ()=>findSizeG(el.dataset.g);
-    const getFl = ()=>findFlag(el.dataset.fl);
+    const getK = ()=>findCat(el.dataset.k);
+    const getC = ()=>S.customers.find(x=>x.id===el.dataset.c);
+    const getFl= ()=>findFlag(el.dataset.fl);
+    const getF = ()=>S.fields.find(x=>x.id===el.dataset.f);
 
-    const getC  = ()=>findCust(el.dataset.c);
-    if(act==="colT"){ el.onchange = ()=>{ getT().color = el.value; save(); render(); }; return; }
-    if(act==="colG"){ el.onchange = ()=>{ getG().color = el.value; save(); render(); }; return; }
-    if(act==="colFl"){ el.onchange = ()=>{ getFl().color = el.value; save(); render(); }; return; }
+    if(act==="colK"){ el.onchange = ()=>{ getK().color = el.value; save(); render(); }; return; }
     if(act==="colC"){ el.onchange = ()=>{ getC().color = el.value; save(); render(); }; return; }
+    if(act==="colFl"){ el.onchange = ()=>{ getFl().color = el.value; save(); render(); }; return; }
+    if(act==="colGl"){ el.onchange = ()=>{ S.gleich.color = el.value; save(); render(); }; return; }
 
     el.onclick = async ()=>{
-      /* --- Kunden --- */
-      if(act==="addC"){
-        const n = await askText("Name des neuen Kunden:", "");
-        if(n){ S.customers.push({id:uid(), name:n, color:"#3a6d4f", own:false}); save(); render(); }
+      /* Kategorien */
+      if(act==="addK"){
+        const n = await askText("Neue Kategorie (z. B. NM1 2 – 2,4 m):", "");
+        if(n){ S.cats.push(cat(n, "#3a6d4f", null, true)); save(); render(); }
       }
-      if(act==="renC"){
-        const c = getC(); const n = await askText("Kunde umbenennen:", c.name);
-        if(n){ c.name=n; save(); render(); }
+      if(act==="renK"){ const c=getK(); const n=await askText("Kategorie umbenennen:", c.label); if(n){ c.label=n; save(); render(); } }
+      if(act==="movK"){ const c=getK(); if(await moveInArray(S.cats, S.cats.indexOf(c), "„"+c.label+"“ verschieben")){ save(); render(); } }
+      if(act==="extK"){
+        const c=getK(); c.extra=!c.extra;
+        if(c.extra) S.layout.forEach(r=>{ r.cells = r.cells.map(x=>x==="c:"+c.id?null:x); });
+        save(); render();
       }
-      if(act==="movC"){
-        const c = getC();
-        if(await moveInArray(S.customers, S.customers.indexOf(c), "„"+c.name+"“ verschieben")){ save(); render(); }
+      if(act==="imgK"){
+        const c=getK();
+        if(c.img){
+          const q = await askChoice("Bild für „"+c.label+"“", ["Neues Foto wählen","Bild entfernen (Farbe verwenden)"]);
+          if(q===1){ c.img=null; save(); render(); return; }
+          if(q!==0) return;
+        }
+        const d = await pickImage(); if(d){ c.img=d; save(); render(); }
       }
-      if(act==="delC"){
-        const c = getC();
-        if(S.customers.length<=1){ await askConfirm("Mindestens ein Kunde/Etikett muss bestehen bleiben.","Verstanden"); return; }
-        const n = custGrandTotal(c.id);
-        if(await askConfirm(`Kunde „${c.name}“ löschen? ${n} vergebene Etiketten und alle Bestellungen dieses Kunden werden gelöscht.`, "Löschen", true)){
-          S.customers = S.customers.filter(x=>x.id!==c.id);
-          Object.keys(S.orders).forEach(k=>{ if(k.split("|")[0]===c.id) delete S.orders[k]; });
+      if(act==="delK"){
+        const c=getK();
+        if(S.cats.length<=1){ await askConfirm("Mindestens eine Kategorie muss bleiben.","Verstanden"); return; }
+        let n=0;
+        S.fields.forEach(f=>f.subs.forEach(sub=>{
+          for(const k in sub.counts){ if(k.split("|")[0]===c.id) n+=sub.counts[k]; }
+          for(const k in (sub.labels||{})){ if(k.split("|")[0]===c.id) n+=sub.labels[k]; }
+        }));
+        if(await askConfirm(`Kategorie „${c.label}“ löschen? ${n} Einträge (Zählung + Etiketten) werden mitgelöscht.`, "Löschen", true)){
+          S.cats = S.cats.filter(x=>x.id!==c.id);
+          S.layout.forEach(r=>{ r.cells = r.cells.map(x=>x==="c:"+c.id?null:x); });
+          Object.keys(S.orders).forEach(k=>{ if(k.split("|")[1]===c.id) delete S.orders[k]; });
           S.fields.forEach(f=>f.subs.forEach(sub=>{
-            for(const k in (sub.labels||{})){ if(k.split("|")[2]===c.id) delete sub.labels[k]; }
-            sub.llog = (sub.llog||[]).filter(k=>k.split("|")[2]!==c.id);
+            for(const k in sub.counts){ if(k.split("|")[0]===c.id) delete sub.counts[k]; }
+            for(const k in (sub.labels||{})){ if(k.split("|")[0]===c.id) delete sub.labels[k]; }
+            sub.log = sub.log.filter(k=>k.split("|")[0]!==c.id);
+            sub.llog = (sub.llog||[]).filter(k=>k.split("|")[0]!==c.id);
           }));
           save(); render();
         }
       }
-      /* --- Bestellungen --- */
+      /* Kunden */
+      if(act==="addC"){
+        if(S.customers.length>=20){ await askConfirm("Maximal 20 Kunden möglich.","Verstanden"); return; }
+        const n = await askText("Name des neuen Kunden:", "");
+        if(n){ S.customers.push({id:uid(), name:n, color:"#3a6d4f", img:null}); save(); render(); }
+      }
+      if(act==="renC"){ const c=getC(); const n=await askText("Kunde umbenennen:", c.name); if(n){ c.name=n; save(); render(); } }
+      if(act==="movC"){ const c=getC(); if(await moveInArray(S.customers, S.customers.indexOf(c), "„"+c.name+"“ verschieben")){ save(); render(); } }
+      if(act==="renGl"){ const n=await askText("Systemetikett umbenennen:", S.gleich.name); if(n){ S.gleich.name=n; save(); render(); } }
+      if(act==="delC"){
+        const c=getC(); const n=custGrandTotal(c.id);
+        if(await askConfirm(`Kunde „${c.name}“ löschen? ${n} vergebene Etiketten und alle Bestellungen werden gelöscht.`, "Löschen", true)){
+          S.customers = S.customers.filter(x=>x.id!==c.id);
+          Object.keys(S.orders).forEach(k=>{ if(k.split("|")[0]===c.id) delete S.orders[k]; });
+          S.fields.forEach(f=>f.subs.forEach(sub=>{
+            for(const k in (sub.labels||{})){ if(k.split("|")[1]===c.id) delete sub.labels[k]; }
+            sub.llog = (sub.llog||[]).filter(k=>k.split("|")[1]!==c.id);
+          }));
+          save(); render();
+        }
+      }
+      /* Bestellungen */
       if(act==="addO"){
-        const c = getC();
-        const gi = await askChoice("Größe für "+c.name, S.sizes.map(x=>x.label));
-        if(gi===null) return;
-        const ti = await askChoice("Qualität für "+c.name, S.types.map(x=>x.name));
-        if(ti===null) return;
+        const c=getC();
+        const i = await askChoice("Kategorie für "+c.name, S.cats.map(x=>x.label));
+        if(i===null) return;
         const q = await askText("Bestellte Stückzahl:", "");
         const num = parseInt(String(q||"").replace(/\D/g,""),10);
-        if(num>0){ S.orders[orderKey(c.id, S.types[ti].id, S.sizes[gi].id)] = num; save(); render(); }
+        if(num>0){ S.orders[orderKey(c.id, S.cats[i].id)] = num; save(); render(); }
       }
       if(act==="qtyO"){
         const k = el.dataset.o;
@@ -1298,164 +1065,52 @@ function renderSettings(){
       }
       if(act==="delO"){
         const k = el.dataset.o;
-        if(await askConfirm("Bestellung löschen? Bereits vergebene Etiketten bleiben erhalten.", "Löschen", true)){
-          delete S.orders[k]; save(); render();
-        }
+        if(await askConfirm("Bestellung löschen? Vergebene Etiketten bleiben erhalten.","Löschen",true)){ delete S.orders[k]; save(); render(); }
       }
-      /* --- Größen --- */
-      if(act==="addG"){
-        const n = await askText("Neue Größe (z. B. 2 – 2,5 m):", "");
-        if(n){ S.sizes.push({id:uid(), label:n, color:null, img:null, extra:true}); save(); render(); }
-      }
-      if(act==="renG"){
-        const g=getG(); const n = await askText("Größe umbenennen:", g.label);
-        if(n){ g.label=n; save(); render(); }
-      }
-      if(act==="movG"){
-        const g=getG();
-        if(await moveInArray(S.sizes, S.sizes.indexOf(g), "„"+g.label+"“ verschieben")){ save(); render(); }
-      }
-      if(act==="extraG"){
-        const g=getG(); g.extra = !g.extra;
-        if(g.extra){ S.layoutSizes.forEach(r=>{ r.cells = r.cells.map(c=>c==="s:"+g.id ? null : c); }); }
-        save(); render();
-      }
-      if(act==="imgG"){
-        const g=getG();
-        if(g.img){
-          const c = await askChoice("Bild für Größe „"+g.label+"“", ["Neues Foto wählen","Bild entfernen (Farbe verwenden)"]);
-          if(c===1){ g.img=null; save(); render(); return; }
-          if(c!==0) return;
-        }
-        const d = await pickImage();
-        if(d){ g.img=d; save(); render(); }
-      }
-      if(act==="delG"){
-        const g=getG();
-        if(S.sizes.length<=1){ await askConfirm("Mindestens eine Größe muss bestehen bleiben.","Verstanden"); return; }
-        let n=0;
-        S.fields.forEach(f=>f.subs.forEach(sub=>{
-          for(const k in sub.counts){ if(k.split("|")[1]===g.id) n += sub.counts[k]; }
-        }));
-        if(await askConfirm(`Größe „${g.label}“ löschen? ${n} vorhandene Zählungen dieser Größe werden mitgelöscht.`, "Löschen", true)){
-          S.sizes = S.sizes.filter(x=>x.id!==g.id);
-          S.layoutSizes.forEach(r=>{ r.cells = r.cells.map(c=>c==="s:"+g.id ? null : c); });
-          S.fields.forEach(f=>f.subs.forEach(sub=>{
-            for(const k in sub.counts){ if(k.split("|")[1]===g.id) delete sub.counts[k]; }
-            sub.log = sub.log.filter(k=>k.split("|")[1]!==g.id);
-          }));
-          save(); render();
-        }
-      }
-      /* --- Typen --- */
-      if(act==="addT"){
-        const n = await askText("Name des neuen Typs:", "");
-        if(n){ S.types.push({id:uid(), name:n, color:"#3a6d4f", img:null}); save(); render(); }
-      }
-      if(act==="renT"){
-        const t = getT(); const n = await askText("Typ-Name:", t.name);
-        if(n){ t.name=n; save(); render(); }
-      }
-      if(act==="movT"){
-        const t=getT();
-        if(await moveInArray(S.types, S.types.indexOf(t), "„"+t.name+"“ verschieben")){ save(); render(); }
-      }
-      if(act==="imgT"){
-        const t = getT();
-        if(t.img){
-          const c = await askChoice("Foto für „"+t.name+"“", ["Neues Foto wählen","Foto entfernen (Farbe verwenden)"]);
-          if(c===1){ t.img=null; save(); render(); return; }
-          if(c!==0) return;
-        }
-        const d = await pickImage();
-        if(d){ t.img=d; save(); render(); }
-      }
-      if(act==="delT"){
-        const t=getT();
-        if(S.types.length<=1){ await askConfirm("Mindestens ein Typ muss bestehen bleiben.","Verstanden"); return; }
-        let n=0;
-        S.fields.forEach(f=>f.subs.forEach(sub=>{
-          for(const k in sub.counts){ if(k.split("|")[0]===t.id) n += sub.counts[k]; }
-        }));
-        if(await askConfirm(`Typ „${t.name}“ löschen? ${n} vorhandene Zählungen dieses Typs werden mitgelöscht.`, "Löschen", true)){
-          S.types = S.types.filter(x=>x.id!==t.id);
-          S.layoutTypes.forEach(r=>{ r.cells = r.cells.map(c=>c==="t:"+t.id ? null : c); });
-          S.fields.forEach(f=>f.subs.forEach(sub=>{
-            for(const k in sub.counts){ if(k.split("|")[0]===t.id) delete sub.counts[k]; }
-            sub.log = sub.log.filter(k=>k.split("|")[0]!==t.id);
-          }));
-          save(); render();
-        }
-      }
-      /* --- Merkmale --- */
-      if(act==="renFl"){
-        const fl = getFl(); const n = await askText("Merkmal umbenennen:", fl.name);
-        if(n){ fl.name=n; save(); render(); }
-      }
-      if(act==="addFl"){
-        const n = await askText("Name des neuen Merkmals:", "");
-        if(n){ S.flags.push({id:uid(), name:n, color:"#555f5b"}); save(); render(); }
-      }
+      /* Merkmale */
+      if(act==="renFl"){ const fl=getFl(); const n=await askText("Merkmal umbenennen:", fl.name); if(n){ fl.name=n; save(); render(); } }
+      if(act==="addFl"){ const n=await askText("Name des neuen Merkmals:",""); if(n){ S.flags.push({id:uid(), name:n, color:"#555f5b"}); save(); render(); } }
       if(act==="delFl"){
-        const fl = getFl();
-        let n=0;
-        S.fields.forEach(f=>f.subs.forEach(sub=>{
-          for(const k in sub.counts){ if(k.split("|")[2]===fl.id) n += sub.counts[k]; }
-        }));
-        if(await askConfirm(`Merkmal „${fl.name}“ löschen?${n?` ${n} damit markierte Zählungen bleiben erhalten und werden zu normalen Zählungen (ohne Merkmal).`:""}`, "Löschen", true)){
+        const fl=getFl();
+        if(await askConfirm(`Merkmal „${fl.name}“ löschen? Markierte Einträge bleiben erhalten (dann ohne Merkmal).`,"Löschen",true)){
           S.fields.forEach(f=>f.subs.forEach(sub=>{
-            for(const k in Object.assign({}, sub.counts)){
-              const p = k.split("|");
-              if(p[2]===fl.id){
-                const nk = p[0]+"|"+p[1]+"|";
-                sub.counts[nk] = (sub.counts[nk]||0) + sub.counts[k];
-                delete sub.counts[k];
-              }
+            for(const k in Object.assign({},sub.counts)){
+              const p=k.split("|");
+              if(p[1]===fl.id){ const nk=p[0]+"|"; sub.counts[nk]=(sub.counts[nk]||0)+sub.counts[k]; delete sub.counts[k]; }
             }
-            sub.log = sub.log.map(k=>{
-              const p = k.split("|");
-              return p[2]===fl.id ? p[0]+"|"+p[1]+"|" : k;
-            });
+            for(const k in Object.assign({},(sub.labels||{}))){
+              const p=k.split("|");
+              if(p[2]===fl.id){ const nk=p[0]+"|"+p[1]+"|"; sub.labels[nk]=(sub.labels[nk]||0)+sub.labels[k]; delete sub.labels[k]; }
+            }
+            sub.log = sub.log.map(k=>{ const p=k.split("|"); return p[1]===fl.id?p[0]+"|":k; });
+            sub.llog = (sub.llog||[]).map(k=>{ const p=k.split("|"); return p[2]===fl.id?p[0]+"|"+p[1]+"|":k; });
           }));
           S.flags = S.flags.filter(x=>x.id!==fl.id);
-          S.layoutSizes.forEach(r=>{ r.cells = r.cells.map(c=>c==="f:"+fl.id ? null : c); });
-          S.layoutTypes.forEach(r=>{ r.cells = r.cells.map(c=>c==="f:"+fl.id ? null : c); });
+          S.layout.forEach(r=>{ r.cells = r.cells.map(x=>x==="f:"+fl.id?null:x); });
           if(armedFlag===fl.id) armedFlag=null;
           save(); render();
         }
       }
-      /* --- Felder --- */
-      if(act==="addF"){
-        const n = await askText("Name des neuen Feldes:", "Feld "+(S.fields.length+1));
-        if(n){ S.fields.push({id:uid(), name:n, subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]}); save(); render(); }
-      }
-      if(act==="renF"){
-        const f = getF(); const n = await askText("Feld umbenennen:", f.name);
-        if(n){ f.name=n; save(); render(); }
-      }
+      /* Felder */
+      if(act==="addF"){ const n=await askText("Name des neuen Feldes:","Feld "+(S.fields.length+1)); if(n){ S.fields.push({id:uid(),name:n,subs:[newSub("Bereich A")]}); save(); render(); } }
+      if(act==="renF"){ const f=getF(); const n=await askText("Feld umbenennen:", f.name); if(n){ f.name=n; save(); render(); } }
       if(act==="delF"){
-        const f = getF();
-        if(S.fields.length<=1){ await askConfirm("Mindestens ein Feld muss bestehen bleiben.","Verstanden"); return; }
-        const total = f.subs.reduce((a,s)=>a+subTotal(s),0);
-        if(await askConfirm(`Feld „${f.name}“ mit ${total} Zählungen wirklich löschen?`, "Löschen", true)){
+        const f=getF();
+        if(S.fields.length<=1){ await askConfirm("Mindestens ein Feld muss bleiben.","Verstanden"); return; }
+        const t = f.subs.reduce((a,s)=>a+subTotal(s)+subLabelTotal(s),0);
+        if(await askConfirm(`Feld „${f.name}“ mit ${t} Einträgen wirklich löschen?`,"Löschen",true)){
           S.fields = S.fields.filter(x=>x.id!==f.id);
           if(S.activeField===f.id){ S.activeField=S.fields[0].id; ensureActiveSub(); }
           save(); render();
         }
       }
-      if(act==="addS"){
-        const f = getF();
-        const n = await askText("Name des Unterbereichs:", "Bereich "+String.fromCharCode(65+f.subs.length));
-        if(n){ f.subs.push({id:uid(), name:n, counts:{}, log:[]}); save(); render(); }
-      }
-      if(act==="renS" || act==="delS"){
-        const f = getF(); const sub = f.subs.find(x=>x.id===el.dataset.s);
-        if(act==="renS"){
-          const n = await askText("Unterbereich umbenennen:", sub.name);
-          if(n){ sub.name=n; save(); render(); }
-        } else {
+      if(act==="addS"){ const f=getF(); const n=await askText("Name des Unterbereichs:","Bereich "+String.fromCharCode(65+f.subs.length)); if(n){ f.subs.push(newSub(n)); save(); render(); } }
+      if(act==="renS"||act==="delS"){
+        const f=getF(); const sub=f.subs.find(x=>x.id===el.dataset.s);
+        if(act==="renS"){ const n=await askText("Unterbereich umbenennen:", sub.name); if(n){ sub.name=n; save(); render(); } }
+        else {
           if(f.subs.length<=1){ await askConfirm("Jedes Feld braucht mindestens einen Unterbereich.","Verstanden"); return; }
-          if(await askConfirm(`„${sub.name}“ mit ${subTotal(sub)} Zählungen wirklich löschen?`, "Löschen", true)){
+          if(await askConfirm(`„${sub.name}“ mit ${subTotal(sub)+subLabelTotal(sub)} Einträgen löschen?`,"Löschen",true)){
             f.subs = f.subs.filter(x=>x.id!==sub.id);
             if(S.activeSub===sub.id) ensureActiveSub();
             save(); render();
@@ -1481,7 +1136,7 @@ function renderSettings(){
       try{
         const s = JSON.parse(r.result);
         if(!s.fields) throw 0;
-        if(await askConfirm("Aktuelle Daten durch die Sicherung ersetzen?", "Wiederherstellen", true)){
+        if(await askConfirm("Aktuelle Daten durch die Sicherung ersetzen?","Wiederherstellen",true)){
           S = normalize(s); ensureActiveSub(); save(); render();
         }
       }catch(_){ await askConfirm("Datei konnte nicht gelesen werden.","Verstanden"); }
@@ -1489,14 +1144,14 @@ function renderSettings(){
     r.readAsText(file);
   };
   document.getElementById("btnReset").onclick = async ()=>{
-    const c = await askChoice("Was soll zurückgesetzt werden?", ["Nur Zählungen löschen","Nur Etiketten löschen","Zählungen UND Etiketten löschen"]);
+    const c = await askChoice("Was soll gelöscht werden?", ["Nur Etiketten","Nur Zählungen","Etiketten UND Zählungen"]);
     if(c===null) return;
-    const txt = c===0 ? "alle Zählungen" : c===1 ? "alle vergebenen Etiketten" : "alle Zählungen und Etiketten";
-    if(await askConfirm(`Wirklich ${txt} in ALLEN Feldern löschen? Felder, Größen, Typen, Kunden, Bestellungen und Layout bleiben erhalten.`, "Weiter", true)){
-      if(await askConfirm("Letzte Sicherheitsfrage: unwiderruflich löschen?", "Ja, löschen", true)){
+    const txt = c===0?"alle Etiketten":c===1?"alle Zählungen":"alle Etiketten und Zählungen";
+    if(await askConfirm(`Wirklich ${txt} in ALLEN Feldern löschen? Kategorien, Kunden, Bestellungen, Felder und Layout bleiben erhalten.`,"Weiter",true)){
+      if(await askConfirm("Letzte Sicherheitsfrage: unwiderruflich löschen?","Ja, löschen",true)){
         S.fields.forEach(f=>f.subs.forEach(s=>{
-          if(c===0||c===2){ s.counts={}; s.log=[]; }
-          if(c===1||c===2){ s.labels={}; s.llog=[]; }
+          if(c===0||c===2){ s.labels={}; s.llog=[]; }
+          if(c===1||c===2){ s.counts={}; s.log=[]; }
         }));
         save(); render();
       }
@@ -1506,7 +1161,6 @@ function renderSettings(){
 
 render();
 
-/* Offline-Fähigkeit */
 if("serviceWorker" in navigator && location.protocol==="https:"){
   navigator.serviceWorker.register("sw.js").catch(function(){});
 }
