@@ -141,6 +141,7 @@
 <div id="app"></div>
 <footer class="tabs">
   <button id="tabCount">🌲 Zählen</button>
+  <button id="tabLabel">🏷️ Etikett</button>
   <button id="tabReport">📊 Bericht</button>
   <button id="tabSettings">⚙️ Verwalten</button>
 </footer>
@@ -246,33 +247,50 @@ try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); }
 catch(e){ storageOK = false; document.getElementById("storageWarn").classList.remove("hidden"); }
 let memFallback = null;
 
+function newSub(name){ return {id:uid(), name:name, counts:{}, log:[], labels:{}, llog:[]}; }
 function defaultState(){
   const gs = (label,color,img,extra)=>({id:uid(), label:label, color:color||null, img:img||null, extra:!!extra});
-  const s45=gs("4,5 – 8 m","#59872c",null,true), s35=gs("3,5 – 4,5 m","#59872c",null,true),
-        s25=gs("2,5 – 3,5 m","#59872c"), s2=gs("2 – 2,5 m",null,PAT.rotweiss),
-        s175=gs("1,75 – 2 m",null,PAT.gelbweiss), s15=gs("1,5 – 1,75 m",null,PAT.lilaweiss),
-        s1=gs("1 – 1,5 m",null,PAT.gruenweiss), s05=gs("0,5 – 1 m","#6f7d78"), s0=gs("0 – 0,5 m","#8a958f");
+  const s2   = gs("2 – 2,4 m",     null,      PAT.rotweiss),
+        s175 = gs("1,75 – 2 m",    null,      PAT.gelbweiss),
+        s15  = gs("1,5 – 1,75 m",  null,      PAT.lilaweiss),
+        s1   = gs("1 – 1,5 m",     null,      PAT.gruenweiss),
+        nm05 = gs("NM 0,5 – 1 m",  "#669d34"),
+        nm0  = gs("NM 0 – 0,5 m",  "#669d34"),
+        s35  = gs("3,5 - 4,5 m",   "#59872c", null, true),
+        s45  = gs("4,5 - 8 m",     "#59872c", null, true),
+        s24  = gs("2,4 – 3,5 m",   "#59872c"),
+        bl05 = gs("Blau 0,5 – 1 m","#00a1d8", null, true),
+        bl0  = gs("Blau 0 – 0,5 m","#2196c4", null, true);
+  const fieldDef = [
+    ["Usseln",       ["Oben Rechts","Oben ab Schneise bis Gabel","Oben Links ab Gabel","Unten NM only","Unten gemischter Streifen"]],
+    ["Kapelle",      ["Links außen","Links haupt","Rechts haupt","Rechts außen"]],
+    ["Östernberg",   ["Oben","Mitte","Unten","Hinten links"]],
+    ["Kentscheid",   ["Oben links","Oben Rechts","Unten","Große"]],
+    ["Grensen",      ["Links","Mitte","Rechts","Unten"]],
+    ["Kettinghausen",["Oben Streifen"]]
+  ];
   return {
     v:4,
-    sizes:[s45,s35,s25,s2,s175,s15,s1,s05,s0],
+    sizes:[s2,s175,s15,s1,nm05,nm0,s35,s45,s24,bl05,bl0],
     types:[
-      {id:"son", name:"Sonder (NM 3, BF 2)", color:"#0a2f8c", img:null},
-      {id:"mue", name:"Vogel",               color:"#b02a64", img:null},
-      {id:"blf", name:"Blaufichte",          color:"#103a52", img:null},
-      {id:"u",   name:"Untergröße",          color:"#6f7d78", img:null},
-      {id:"nm1", name:"NM 1",                color:"#59872c", img:null},
-      {id:"nm2", name:"NM 2",                color:"#2e4d1e", img:null}
+      {id:"son", name:"Sonder (Müll)", color:"#0a2f8c", img:null},
+      {id:"mue", name:"Vogel",         color:"#7a1010", img:null},
+      {id:"blf", name:"Blaufichte",    color:"#103a52", img:null},
+      {id:"u",   name:"Untergröße",    color:"#858585", img:null},
+      {id:"nm1", name:"NM 1",          color:"#59872c", img:null},
+      {id:"nm2", name:"NM 2",          color:"#2e4d1e", img:null}
     ],
     flags:[
-      {id:"vogel", name:"Vögel", color:"#b02a64"},
-      {id:"laus",  name:"Läuse", color:"#aa6c1f"},
-      {id:"m3",    name:"Merkmal 3", color:"#555f5b"}
+      {id:"vogel", name:"Überlänge", color:"#474747"},
+      {id:"laus",  name:"Krum",      color:"#474747"}
     ],
+    customers:[ {id:"own", name:"Eigenes Etikett", color:"#ffd23f", own:true} ],
+    orders:{},
     layoutSizes:[
-      {h:"half", cells:["menu",      "s:"+s25.id]},
-      {h:"full", cells:["s:"+s2.id,  "s:"+s175.id]},
-      {h:"full", cells:["s:"+s15.id, "s:"+s1.id]},
-      {h:"half", cells:["s:"+s05.id, "s:"+s0.id]}
+      {h:"half", cells:["menu",       "s:"+s24.id]},
+      {h:"full", cells:["s:"+s175.id, "s:"+s2.id]},
+      {h:"full", cells:["s:"+s1.id,   "s:"+s15.id]},
+      {h:"half", cells:["s:"+nm0.id,  "s:"+nm05.id]}
     ],
     layoutTypes:[
       {h:"half", cells:["t:son","t:mue"]},
@@ -280,7 +298,7 @@ function defaultState(){
       {h:"full", cells:["t:nm1","t:nm2"]},
       {h:"half", cells:["f:vogel","f:laus"]}
     ],
-    fields:[ {id:uid(), name:"Feld 1", subs:[{id:uid(), name:"Bereich A", counts:{}, log:[]}]} ],
+    fields: fieldDef.map(f=>({id:uid(), name:f[0], subs:f[1].map(n=>newSub(n))})),
     activeField:null, activeSub:null
   };
 }
@@ -360,10 +378,19 @@ function migrateAncient(o){
   }
   return s;
 }
+function ensureLabelStructs(s){
+  if(!s.customers || !s.customers.length) s.customers = [{id:"own", name:"Eigenes Etikett", color:"#ffd23f", own:true}];
+  if(!s.orders) s.orders = {};
+  (s.fields||[]).forEach(f=>(f.subs||[]).forEach(sub=>{
+    if(!sub.labels) sub.labels = {};
+    if(!sub.llog)   sub.llog   = [];
+  }));
+  return s;
+}
 function normalize(s){
-  if(s && s.v===4 && s.sizes && s.types && s.flags && s.layoutSizes && s.layoutTypes && s.fields) return s;
-  if(s && s.types && s.types.length && s.types[0] && s.types[0].sizes) return migrateV3(s);
-  if(s && s.fields) return migrateAncient(s);
+  if(s && s.v===4 && s.sizes && s.types && s.flags && s.layoutSizes && s.layoutTypes && s.fields) return ensureLabelStructs(s);
+  if(s && s.types && s.types.length && s.types[0] && s.types[0].sizes) return ensureLabelStructs(migrateV3(s));
+  if(s && s.fields) return ensureLabelStructs(migrateAncient(s));
   return defaultState();
 }
 function load(){
@@ -442,24 +469,86 @@ function flagTotalInSub(sub, flagId){
   return n;
 }
 
+/* ---- Etikettieren: Schlüssel typId|größenId|kundenId|merkmalId ---- */
+function findCust(cid){ return S.customers.find(x=>x.id===cid); }
+function orderKey(cid,tid,sid){ return cid+"|"+tid+"|"+sid; }
+function orderQty(cid,tid,sid){ return S.orders[orderKey(cid,tid,sid)] || 0; }
+function addLabel(typeId, sizeId, custId){
+  const sub = curSub();
+  if(!sub.labels) sub.labels = {}; if(!sub.llog) sub.llog = [];
+  const k = typeId+"|"+sizeId+"|"+custId+"|"+(armedFlag||"");
+  sub.labels[k] = (sub.labels[k]||0) + 1;
+  sub.llog.push(k);
+  if(sub.llog.length > 3000) sub.llog.shift();
+  armedFlag = null;
+  save();
+  if(navigator.vibrate) navigator.vibrate(25);
+}
+function undoLabel(){
+  const sub = curSub();
+  if(!sub.llog || !sub.llog.length) return;
+  const k = sub.llog.pop();
+  if(sub.labels[k]) sub.labels[k]--;
+  if(sub.labels[k]===0) delete sub.labels[k];
+  save(); render();
+}
+function subLabelTotal(sub){ return Object.values(sub.labels||{}).reduce((a,b)=>a+b,0); }
+function labelSizeTotalInSub(sub, sizeId){
+  let n=0; for(const k in (sub.labels||{})){ if(k.split("|")[1]===sizeId) n += sub.labels[k]; }
+  return n;
+}
+function labelTypeSizeTotalInSub(sub, typeId, sizeId){
+  let n=0; for(const k in (sub.labels||{})){ const p=k.split("|"); if(p[0]===typeId && p[1]===sizeId) n += sub.labels[k]; }
+  return n;
+}
+/* Fortschritt eines Kunden für Typ+Größe über ALLE Felder */
+function custProgress(custId, typeId, sizeId){
+  let total = 0; const byField = [];
+  S.fields.forEach(f=>{
+    let n = 0;
+    f.subs.forEach(sub=>{
+      for(const k in (sub.labels||{})){
+        const p = k.split("|");
+        if(p[0]===typeId && p[1]===sizeId && p[2]===custId) n += sub.labels[k];
+      }
+    });
+    if(n>0){ total += n; byField.push({name:f.name, n:n}); }
+  });
+  return {total:total, byField:byField, target:orderQty(custId,typeId,sizeId)};
+}
+function custGrandTotal(custId){
+  let n=0;
+  S.fields.forEach(f=>f.subs.forEach(sub=>{
+    for(const k in (sub.labels||{})){ if(k.split("|")[2]===custId) n += sub.labels[k]; }
+  }));
+  return n;
+}
+
 /* ================= Ansichten ================= */
 const app = document.getElementById("app");
-let view = "count";     // count (Größen) | sizemenu | type | report | settings
+let view = "count";     // count | sizemenu | type | lcount | lsizemenu | ltype | lcust | report | settings
 let reportFieldId = null;
+let selType = null;     // gewählter Typ beim Etikettieren
 
 function setView(v){ view=v; render(); }
 document.getElementById("tabCount").onclick    = ()=>{ selSize=null; setView("count"); };
+document.getElementById("tabLabel").onclick    = ()=>{ selSize=null; selType=null; setView("lcount"); };
 document.getElementById("tabReport").onclick   = ()=>{ reportFieldId = S.activeField; setView("report"); };
 document.getElementById("tabSettings").onclick = ()=>setView("settings");
 
 function render(){
-  ["tabCount","tabReport","tabSettings"].forEach(id=>document.getElementById(id).classList.remove("active"));
+  ["tabCount","tabLabel","tabReport","tabSettings"].forEach(id=>document.getElementById(id).classList.remove("active"));
   if(view==="count"||view==="sizemenu"||view==="type") document.getElementById("tabCount").classList.add("active");
+  if(view==="lcount"||view==="lsizemenu"||view==="ltype"||view==="lcust") document.getElementById("tabLabel").classList.add("active");
   if(view==="report") document.getElementById("tabReport").classList.add("active");
   if(view==="settings") document.getElementById("tabSettings").classList.add("active");
   if(view==="count") renderCount();
   else if(view==="sizemenu") renderSizeMenu();
   else if(view==="type") renderTypePage();
+  else if(view==="lcount") renderLabelSizes();
+  else if(view==="lsizemenu") renderLabelSizeMenu();
+  else if(view==="ltype") renderLabelTypes();
+  else if(view==="lcust") renderLabelCustomers();
   else if(view==="report") renderReport();
   else renderSettings();
 }
@@ -609,7 +698,189 @@ function renderTypePage(){
   document.getElementById("btnBack").onclick = ()=>{ selSize=null; setView("count"); };
 }
 
+/* ================= ETIKETTIEREN ================= */
+function lastLabelText(sub){
+  const k = (sub.llog||[])[ (sub.llog||[]).length-1 ];
+  if(!k) return "Noch kein Etikett in diesem Bereich";
+  const p = k.split("|");
+  const t = findType(p[0]), s = findSizeG(p[1]), c = findCust(p[2]), fl = p[3]?findFlag(p[3]):null;
+  return "Zuletzt: <b>" + (s?esc(s.label):"?") + " · " + (t?esc(t.name):"?") + " → " + (c?esc(c.name):"?") + (fl?" · "+esc(fl.name):"") + "</b>";
+}
+/* Seite 1: Größen */
+function labelSizeCellHTML(ref, sub){
+  if(!ref) return '<div class="tile emptycell"></div>';
+  if(ref==="menu"){
+    const extras = S.sizes.filter(x=>x.extra);
+    return `<button class="tile menutile" data-menu="1">
+      <span class="tname" style="font-size:clamp(16px,4.8vw,22px);">📂 Mehr…</span>
+      <span class="tsub">${extras.length} weitere Größen</span>
+    </button>`;
+  }
+  if(ref.indexOf("s:")===0){
+    const g = findSizeG(ref.slice(2));
+    if(!g) return '<div class="tile emptycell"></div>';
+    return `<button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
+      <span class="tcount">${labelSizeTotalInSub(sub, g.id)}</span>
+      <span class="tname">${esc(g.label)}</span>
+    </button>`;
+  }
+  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
+  return '<div class="tile emptycell"></div>';
+}
+function renderLabelSizes(){
+  const f = curField(), sub = curSub();
+  const rowsCSS = S.layoutSizes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
+  app.innerHTML = `
+    <header>
+      <div class="ctx">
+        <select id="selField">${S.fields.map(x=>`<option value="${x.id}" ${x.id===f.id?"selected":""}>📍 ${esc(x.name)}</option>`).join("")}</select>
+        <select id="selSub">${f.subs.map(x=>`<option value="${x.id}" ${x.id===sub.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>
+      </div>
+    </header>
+    <div class="undobar">
+      <div class="last">🏷️ ${lastLabelText(sub)} &nbsp;·&nbsp; Bereich: <b>${subLabelTotal(sub)}</b></div>
+      <button id="btnUndo" ${(sub.llog||[]).length? "":"disabled"}>↩︎ Rückgängig</button>
+    </div>
+    <div class="grid" style="grid-template-rows:${rowsCSS}">
+      ${S.layoutSizes.map(r=>labelSizeCellHTML(r.cells[0],sub)+labelSizeCellHTML(r.cells[1],sub)).join("")}
+    </div>`;
+  document.getElementById("selField").onchange = e=>{ S.activeField=e.target.value; ensureActiveSub(); armedFlag=null; save(); render(); };
+  document.getElementById("selSub").onchange   = e=>{ S.activeSub=e.target.value; armedFlag=null; save(); render(); };
+  document.getElementById("btnUndo").onclick   = undoLabel;
+  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
+    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("ltype"); };
+  });
+  app.querySelectorAll(".tile[data-menu]").forEach(btn=>{ btn.onclick = ()=>setView("lsizemenu"); });
+  app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
+    btn.onclick = ()=>{ const id=btn.dataset.flag; armedFlag = (armedFlag===id)?null:id; render(); };
+  });
+}
+function renderLabelSizeMenu(){
+  const sub = curSub();
+  const extras = S.sizes.filter(x=>x.extra);
+  app.innerHTML = `
+    <div class="sizehead" style="background:var(--panel2);">📂 Weitere Größen</div>
+    <div class="grid" style="grid-template-rows:repeat(${Math.max(1,Math.ceil(extras.length/2))},1fr)">
+      ${extras.map(g=>`
+        <button class="tile" data-size="${g.id}" style="${tileStyle(g.color, g.img)}">
+          <span class="tcount">${labelSizeTotalInSub(sub, g.id)}</span>
+          <span class="tname">${esc(g.label)}</span>
+        </button>`).join("")}
+      ${extras.length%2 ? '<div class="tile emptycell"></div>' : ""}
+    </div>
+    <button class="backbtn" id="btnBack">← Zurück</button>`;
+  app.querySelectorAll(".tile[data-size]").forEach(btn=>{
+    btn.onclick = ()=>{ selSize = btn.dataset.size; setView("ltype"); };
+  });
+  document.getElementById("btnBack").onclick = ()=>setView("lcount");
+}
+/* Seite 2: Typen */
+function labelTypeCellHTML(ref, sub){
+  if(!ref) return '<div class="tile emptycell"></div>';
+  if(ref.indexOf("t:")===0){
+    const t = findType(ref.slice(2));
+    if(!t) return '<div class="tile emptycell"></div>';
+    return `<button class="tile" data-type="${t.id}" style="${tileStyle(t.color, t.img)}">
+      <span class="tcount">${labelTypeSizeTotalInSub(sub, t.id, selSize)}</span>
+      <span class="tname">${esc(t.name)}</span>
+    </button>`;
+  }
+  if(ref.indexOf("f:")===0) return flagCellHTML(ref.slice(2), sub);
+  return '<div class="tile emptycell"></div>';
+}
+function renderLabelTypes(){
+  const g = findSizeG(selSize);
+  if(!g){ setView("lcount"); return; }
+  const sub = curSub();
+  const fl = armedFlag ? findFlag(armedFlag) : null;
+  const rowsCSS = S.layoutTypes.map(r=>r.h==="half"?"0.52fr":"1fr").join(" ");
+  app.innerHTML = `
+    <div class="sizehead" style="${tileStyle(g.color, g.img)}">🏷️ ${esc(g.label)} – Qualität wählen${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}</div>
+    <div class="grid" style="grid-template-rows:${rowsCSS}">
+      ${S.layoutTypes.map(r=>labelTypeCellHTML(r.cells[0],sub)+labelTypeCellHTML(r.cells[1],sub)).join("")}
+    </div>
+    <button class="backbtn" id="btnBack">✕ Abbrechen</button>`;
+  app.querySelectorAll(".tile[data-type]").forEach(btn=>{
+    btn.onclick = ()=>{ selType = btn.dataset.type; setView("lcust"); };
+  });
+  app.querySelectorAll(".tile[data-flag]").forEach(btn=>{
+    btn.onclick = ()=>{ const id=btn.dataset.flag; armedFlag = (armedFlag===id)?null:id; render(); };
+  });
+  document.getElementById("btnBack").onclick = ()=>{ selSize=null; setView("lcount"); };
+}
+/* Seite 3: Kunde */
+function renderLabelCustomers(){
+  const g = findSizeG(selSize), t = findType(selType);
+  if(!g || !t){ setView("lcount"); return; }
+  const fl = armedFlag ? findFlag(armedFlag) : null;
+
+  const rows = S.customers.map(c=>{
+    const p = custProgress(c.id, t.id, g.id);
+    return {c:c, p:p};
+  });
+  // Kunden mit Bestellung für diese Kombination zuerst, danach die übrigen
+  rows.sort((a,b)=>{
+    const ao = a.p.target>0?0:1, bo = b.p.target>0?0:1;
+    if(ao!==bo) return ao-bo;
+    if(ao===0){
+      const ar = a.p.target - a.p.total, br = b.p.target - b.p.total; // größter Restbedarf zuerst
+      if(ar!==br) return br-ar;
+    }
+    return S.customers.indexOf(a.c) - S.customers.indexOf(b.c);
+  });
+
+  app.innerHTML = `
+    <div class="sizehead" style="${tileStyle(g.color, g.img)}">
+      🏷️ ${esc(g.label)} · ${esc(t.name)}${fl?` · <span class="fbadge" style="background:${fl.color}">${esc(fl.name)}</span>`:""}
+      <div style="font-size:13px;font-weight:600;opacity:.9;margin-top:4px;">Kunde / Etikett wählen</div>
+    </div>
+    <div class="page" style="padding:10px 12px;">
+      ${rows.map(r=>{
+        const p = r.p, done = p.target>0 && p.total>=p.target;
+        const fields = p.byField.length ? p.byField.map(x=>x.n+" "+esc(x.name)).join(" · ") : "noch keine auf einem Feld";
+        return `<button class="btn" data-cust="${r.c.id}" style="width:100%;text-align:left;margin-bottom:9px;padding:12px;display:flex;align-items:center;gap:11px;${done?"opacity:.62;":""}">
+          <span style="width:34px;height:34px;border-radius:8px;flex:none;background:${r.c.color};border:1px solid var(--line);"></span>
+          <span style="flex:1;min-width:0;">
+            <span style="display:block;font-size:17px;">${esc(r.c.name)}${r.c.own?' <span class="badge">eigenes</span>':""}</span>
+            <span style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;white-space:normal;">${esc(fields)}</span>
+          </span>
+          <span style="flex:none;text-align:right;font-variant-numeric:tabular-nums;">
+            <span style="display:block;font-size:17px;color:${done?"var(--muted)":"var(--accent)"};">${p.total}${p.target>0?"/"+p.target:""}</span>
+            ${p.target>0?`<span style="display:block;font-size:11px;font-weight:600;color:var(--muted);">${done?"erfüllt":"noch "+(p.target-p.total)}</span>`:`<span style="display:block;font-size:11px;font-weight:600;color:var(--muted);">ohne Bestellung</span>`}
+          </span>
+        </button>`;
+      }).join("")}
+      ${S.customers.length? "" : '<div class="muted">Noch keine Kunden angelegt – unter ⚙️ Verwalten → 👥 Kunden hinzufügen.</div>'}
+    </div>
+    <button class="backbtn" id="btnBack">← Zurück zur Qualität</button>`;
+
+  app.querySelectorAll("[data-cust]").forEach(btn=>{
+    btn.onclick = ()=>{
+      addLabel(selType, selSize, btn.dataset.cust);
+      selSize=null; selType=null;
+      setView("lcount");
+    };
+  });
+  document.getElementById("btnBack").onclick = ()=>{ selType=null; setView("ltype"); };
+}
+
 /* ---------- Bericht ---------- */
+function allLabelRows(labels){
+  const rows = [];
+  for(const k in (labels||{})){
+    const n = labels[k]; if(!(n>0)) continue;
+    const p = k.split("|");
+    const t = findType(p[0]), s = findSizeG(p[1]), c = findCust(p[2]);
+    if(!t || !s) continue;
+    rows.push({t, s, c:c||{name:"(gelöscht)",color:"#666"}, cid:p[2], fid:p[3]||"", n, k});
+  }
+  rows.sort((a,b)=>
+    (S.sizes.indexOf(a.s)-S.sizes.indexOf(b.s)) ||
+    (S.types.indexOf(a.t)-S.types.indexOf(b.t)) ||
+    String(a.c.name).localeCompare(String(b.c.name))
+  );
+  return rows;
+}
 function allCountRows(counts){
   const rows = [];
   for(const k in counts){
@@ -667,11 +938,20 @@ function renderReport(){
   });
 
   html += `
-      <button class="btn primary wide" id="btnCsvField">⬇️ Excel-Export: nur „${esc(f.name)}“</button>
-      <button class="btn wide" id="btnCsvAll">⬇️ Excel-Export: alle Felder</button>
+      <button class="btn primary wide" id="btnCsvField">⬇️ Excel-Export Zählung: nur „${esc(f.name)}“</button>
+      <button class="btn wide" id="btnCsvAll">⬇️ Excel-Export Zählung: alle Felder</button>
       <p class="muted">CSV-Spalten: Feld; Unterbereich; Größe; Qualität; Merkmal; Anzahl. Merkmal ist leer bei normalen Zählungen.</p>
+
+      <div class="card" style="margin-top:16px;">
+        <h2 style="margin-top:0;">🏷️ Etiketten je Kunde <span class="muted" style="font-weight:400;">(alle Felder)</span></h2>
+        ${customerReportHTML()}
+      </div>
+      <button class="btn primary wide" id="btnCsvLab">⬇️ Excel-Export Etiketten (alle Felder)</button>
+      <p class="muted">CSV-Spalten: Kunde; Größe; Qualität; Feld; Unterbereich; Merkmal; Anzahl; Bestellt.</p>
     </div>`;
   app.innerHTML = html;
+  const bl = document.getElementById("btnCsvLab");
+  if(bl) bl.onclick = ()=>exportLabelCSV();
 
   document.getElementById("repField").onchange = e=>{ reportFieldId=e.target.value; render(); };
   app.querySelectorAll(".corr button").forEach(b=>{
@@ -692,6 +972,74 @@ function tableHTML(agg){
       <td>${r.fid?`<span class="fbadge" style="background:${(findFlag(r.fid)||{}).color||'#666'}">${esc(flagName(r.fid))}</span>`:""}</td>
       <td class="num">${r.n}</td>
     </tr>`).join("")}</table>`;
+}
+function customerReportHTML(){
+  let html = "";
+  let any = false;
+  S.customers.forEach(c=>{
+    // alle Kombinationen sammeln: aus Bestellungen und aus vergebenen Etiketten
+    const combos = {};
+    for(const ok in S.orders){
+      const p = ok.split("|");
+      if(p[0]===c.id && S.orders[ok]>0) combos[p[1]+"|"+p[2]] = true;
+    }
+    S.fields.forEach(f=>f.subs.forEach(sub=>{
+      for(const k in (sub.labels||{})){
+        const p = k.split("|");
+        if(p[2]===c.id) combos[p[0]+"|"+p[1]] = true;
+      }
+    }));
+    const list = Object.keys(combos);
+    const grand = custGrandTotal(c.id);
+    if(!list.length && !grand) return;
+    any = true;
+    html += `<div style="margin-bottom:14px;">
+      <div class="row" style="margin-bottom:6px;">
+        <span style="width:16px;height:16px;border-radius:4px;flex:none;background:${c.color};border:1px solid var(--line);"></span>
+        <b class="grow" style="font-size:16px;">${esc(c.name)}</b>
+        <span class="muted">${grand} Etiketten</span>
+      </div>
+      <table><tr><th>Größe</th><th>Qualität</th><th style="text-align:right">Vergeben</th><th style="text-align:right">Bestellt</th><th>Felder</th></tr>`;
+    list.sort((a,b)=>{
+      const [ta,sa]=a.split("|"), [tb,sb]=b.split("|");
+      return (S.sizes.findIndex(x=>x.id===sa)-S.sizes.findIndex(x=>x.id===sb)) ||
+             (S.types.findIndex(x=>x.id===ta)-S.types.findIndex(x=>x.id===tb));
+    }).forEach(key=>{
+      const [tid,sid] = key.split("|");
+      const t = findType(tid), s = findSizeG(sid);
+      if(!t || !s) return;
+      const p = custProgress(c.id, tid, sid);
+      const done = p.target>0 && p.total>=p.target;
+      html += `<tr>
+        <td>${esc(s.label)}</td>
+        <td><span class="dot" style="background:${t.color}"></span>${esc(t.name)}</td>
+        <td class="num" style="color:${done?"var(--muted)":"var(--accent)"}">${p.total}</td>
+        <td class="num">${p.target||"–"}</td>
+        <td style="font-size:12px;color:var(--muted);">${p.byField.map(x=>x.n+" "+esc(x.name)).join("<br>")}</td>
+      </tr>`;
+    });
+    html += `</table></div>`;
+  });
+  return any ? html : '<div class="muted">Noch keine Etiketten vergeben und keine Bestellungen hinterlegt.</div>';
+}
+function exportLabelCSV(){
+  let csv = "\uFEFFKunde;Größe;Qualität;Feld;Unterbereich;Merkmal;Anzahl;Bestellt\r\n";
+  S.customers.forEach(c=>{
+    S.fields.forEach(f=>{
+      f.subs.forEach(sub=>{
+        allLabelRows(sub.labels).filter(r=>r.cid===c.id).forEach(r=>{
+          csv += [c.name, r.s.label, r.t.name, f.name, sub.name, flagName(r.fid), r.n, orderQty(c.id, r.t.id, r.s.id)||""]
+            .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")+"\r\n";
+        });
+      });
+    });
+  });
+  const date = new Date().toISOString().slice(0,10);
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "Etiketten_"+date+".csv";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
 function exportCSV(fields){
   let csv = "\uFEFFFeld;Unterbereich;Größe;Qualität;Merkmal;Anzahl\r\n";
@@ -803,6 +1151,41 @@ function renderSettings(){
   </div>
 
     <div class="card">
+      <h2 style="margin-top:0;">👥 Kunden & Bestellungen</h2>
+      <p class="muted">Jeder Kunde hat eine Etikettfarbe. Bestellungen: pro Größe + Qualität die bestellte Stückzahl – sie erscheint beim Etikettieren als (vergeben/bestellt).</p>`;
+  S.customers.forEach(c=>{
+    html += `<div style="border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:10px;">
+      <div class="row">
+        <input type="color" value="${c.color}" data-act="colC" data-c="${c.id}">
+        <b class="grow" style="font-size:16px;">${esc(c.name)}${c.own?'<span class="badge">eigenes</span>':""}</b>
+        <button class="btn tiny" data-act="movC" data-c="${c.id}">↕</button>
+        <button class="btn tiny" data-act="renC" data-c="${c.id}">✏️</button>
+        <button class="btn tiny danger" data-act="delC" data-c="${c.id}">🗑</button>
+      </div>`;
+    const oks = Object.keys(S.orders).filter(k=>k.split("|")[0]===c.id && S.orders[k]>0);
+    oks.sort((a,b)=>{
+      const pa=a.split("|"), pb=b.split("|");
+      return (S.sizes.findIndex(x=>x.id===pa[2])-S.sizes.findIndex(x=>x.id===pb[2])) ||
+             (S.types.findIndex(x=>x.id===pa[1])-S.types.findIndex(x=>x.id===pb[1]));
+    });
+    oks.forEach(k=>{
+      const p = k.split("|"), t = findType(p[1]), g = findSizeG(p[2]);
+      if(!t || !g) return;
+      const done = custProgress(c.id, t.id, g.id).total;
+      html += `<div class="row" style="padding-left:8px;">
+        <span class="grow" style="font-size:13px;">${esc(g.label)} · ${esc(t.name)}
+          <span class="badge">${done}/${S.orders[k]}</span></span>
+        <button class="btn tiny" data-act="qtyO" data-o="${k}">✏️</button>
+        <button class="btn tiny danger" data-act="delO" data-o="${k}">🗑</button>
+      </div>`;
+    });
+    html += `<button class="btn tiny" style="font-size:13px;" data-act="addO" data-c="${c.id}">＋ Bestellung</button>
+    </div>`;
+  });
+  html += `<button class="btn small" data-act="addC">＋ Kunde</button>
+    </div>
+
+    <div class="card">
       <h2 style="margin-top:0;">📍 Felder & Unterbereiche</h2>`;
   S.fields.forEach(f=>{
     html += `<div style="margin-bottom:14px;">
@@ -862,11 +1245,63 @@ function renderSettings(){
     const getG  = ()=>findSizeG(el.dataset.g);
     const getFl = ()=>findFlag(el.dataset.fl);
 
+    const getC  = ()=>findCust(el.dataset.c);
     if(act==="colT"){ el.onchange = ()=>{ getT().color = el.value; save(); render(); }; return; }
     if(act==="colG"){ el.onchange = ()=>{ getG().color = el.value; save(); render(); }; return; }
     if(act==="colFl"){ el.onchange = ()=>{ getFl().color = el.value; save(); render(); }; return; }
+    if(act==="colC"){ el.onchange = ()=>{ getC().color = el.value; save(); render(); }; return; }
 
     el.onclick = async ()=>{
+      /* --- Kunden --- */
+      if(act==="addC"){
+        const n = await askText("Name des neuen Kunden:", "");
+        if(n){ S.customers.push({id:uid(), name:n, color:"#3a6d4f", own:false}); save(); render(); }
+      }
+      if(act==="renC"){
+        const c = getC(); const n = await askText("Kunde umbenennen:", c.name);
+        if(n){ c.name=n; save(); render(); }
+      }
+      if(act==="movC"){
+        const c = getC();
+        if(await moveInArray(S.customers, S.customers.indexOf(c), "„"+c.name+"“ verschieben")){ save(); render(); }
+      }
+      if(act==="delC"){
+        const c = getC();
+        if(S.customers.length<=1){ await askConfirm("Mindestens ein Kunde/Etikett muss bestehen bleiben.","Verstanden"); return; }
+        const n = custGrandTotal(c.id);
+        if(await askConfirm(`Kunde „${c.name}“ löschen? ${n} vergebene Etiketten und alle Bestellungen dieses Kunden werden gelöscht.`, "Löschen", true)){
+          S.customers = S.customers.filter(x=>x.id!==c.id);
+          Object.keys(S.orders).forEach(k=>{ if(k.split("|")[0]===c.id) delete S.orders[k]; });
+          S.fields.forEach(f=>f.subs.forEach(sub=>{
+            for(const k in (sub.labels||{})){ if(k.split("|")[2]===c.id) delete sub.labels[k]; }
+            sub.llog = (sub.llog||[]).filter(k=>k.split("|")[2]!==c.id);
+          }));
+          save(); render();
+        }
+      }
+      /* --- Bestellungen --- */
+      if(act==="addO"){
+        const c = getC();
+        const gi = await askChoice("Größe für "+c.name, S.sizes.map(x=>x.label));
+        if(gi===null) return;
+        const ti = await askChoice("Qualität für "+c.name, S.types.map(x=>x.name));
+        if(ti===null) return;
+        const q = await askText("Bestellte Stückzahl:", "");
+        const num = parseInt(String(q||"").replace(/\D/g,""),10);
+        if(num>0){ S.orders[orderKey(c.id, S.types[ti].id, S.sizes[gi].id)] = num; save(); render(); }
+      }
+      if(act==="qtyO"){
+        const k = el.dataset.o;
+        const q = await askText("Bestellte Stückzahl:", String(S.orders[k]||""));
+        const num = parseInt(String(q||"").replace(/\D/g,""),10);
+        if(num>0){ S.orders[k]=num; save(); render(); }
+      }
+      if(act==="delO"){
+        const k = el.dataset.o;
+        if(await askConfirm("Bestellung löschen? Bereits vergebene Etiketten bleiben erhalten.", "Löschen", true)){
+          delete S.orders[k]; save(); render();
+        }
+      }
       /* --- Größen --- */
       if(act==="addG"){
         const n = await askText("Neue Größe (z. B. 2 – 2,5 m):", "");
@@ -1054,9 +1489,15 @@ function renderSettings(){
     r.readAsText(file);
   };
   document.getElementById("btnReset").onclick = async ()=>{
-    if(await askConfirm("Wirklich ALLE Zählungen in ALLEN Feldern auf 0 setzen? Felder, Größen, Typen, Layout und Fotos bleiben erhalten.", "Weiter", true)){
-      if(await askConfirm("Letzte Sicherheitsfrage: Zählungen unwiderruflich löschen?", "Ja, alles löschen", true)){
-        S.fields.forEach(f=>f.subs.forEach(s=>{ s.counts={}; s.log=[]; }));
+    const c = await askChoice("Was soll zurückgesetzt werden?", ["Nur Zählungen löschen","Nur Etiketten löschen","Zählungen UND Etiketten löschen"]);
+    if(c===null) return;
+    const txt = c===0 ? "alle Zählungen" : c===1 ? "alle vergebenen Etiketten" : "alle Zählungen und Etiketten";
+    if(await askConfirm(`Wirklich ${txt} in ALLEN Feldern löschen? Felder, Größen, Typen, Kunden, Bestellungen und Layout bleiben erhalten.`, "Weiter", true)){
+      if(await askConfirm("Letzte Sicherheitsfrage: unwiderruflich löschen?", "Ja, löschen", true)){
+        S.fields.forEach(f=>f.subs.forEach(s=>{
+          if(c===0||c===2){ s.counts={}; s.log=[]; }
+          if(c===1||c===2){ s.labels={}; s.llog=[]; }
+        }));
         save(); render();
       }
     }
