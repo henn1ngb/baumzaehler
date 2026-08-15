@@ -1,5 +1,5 @@
 /* Baumzähler – Offline-Cache (network-first für Seiten) */
-const CACHE = "baumzaehler-v12";
+const CACHE = "baumzaehler-v13";
 const FILES = ["./", "./index.html", "./app.html", "./manifest.json", "./icon-180.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
